@@ -54,6 +54,11 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 .talk{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;align-items:center}
 .bubble{background:var(--bg);border:2px solid var(--line);border-radius:20px 20px 20px 4px;padding:12px 16px;font-weight:700;min-height:64px;display:flex;align-items:center}
 body:not(.audio) .say{display:none}
+#find{width:100%;font:16px Nunito,sans-serif;min-height:48px;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);margin:6px 0 10px}
+#find:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.grp{margin:18px 0 6px;font:800 18px "Baloo 2",sans-serif;color:var(--coral)}
+.ph{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ph b{font:800 21px "Baloo 2",sans-serif;color:var(--green2);flex:1 1 200px}.ph span{flex:1 1 180px}.ph .say{margin:0}
 .mission{margin:.7em 0 0;font-weight:800;color:var(--coral)}
 .say{font:800 15px Nunito,sans-serif;min-height:44px;padding:6px 14px;margin-top:8px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
 .q{text-align:center;margin:20px 0 14px;font-size:19px}
@@ -123,7 +128,7 @@ body:not(.audio) .say{display:none}
   <svg class="mama" viewBox="0 0 120 130" data-mood="happy" role="img" aria-label="Mama in a gold gele, smiling"><use href="#mamaArt"/></svg>
  </div>
  <div class="chips" id="chips" role="group" aria-label="Choose a topic"></div>
- <div class="row"><button class="btn" id="go">Play</button><span class="toast" id="bestStart"></span></div>
+ <div class="row"><button class="btn" id="go">Play</button><button class="btn alt" id="openBook">Phrasebook</button><span class="toast" id="bestStart"></span></div>
  <ul class="how">
   <li><b>Right answers</b> build a streak; every 3 in a row raises your multiplier (up to x4).</li>
   <li><b>Wrong answers</b> cost a slipper. Lose all 3 and Mama ends the lesson.</li>
@@ -143,6 +148,14 @@ body:not(.audio) .say{display:none}
  </div>
  <div class="q" id="q"></div>
  <div class="opts" id="opts"></div>
+</section>
+
+<section id="book" class="hidden">
+ <div class="hud"><h2>Phrasebook</h2><button class="btn alt" id="closeBook">Back</button></div>
+ <p class="sub">Heading to the East? Look up what you need, fast.</p>
+ <label for="find" class="sub" style="display:block;margin-top:14px">Search in English or Igbo</label>
+ <input id="find" type="search" placeholder="e.g. how much, hospital, thank you" autocomplete="off">
+ <div id="bookList"></div>
 </section>
 
 <section id="end" class="hidden">
@@ -170,9 +183,14 @@ const WORDS=[
  ["Isi","Head","Body"],["Anya","Eye","Body"],["Ntị","Ear","Body"],["Ọnụ","Mouth","Body"],["Aka","Hand","Body"],["Ụkwụ","Leg / foot","Body"],["Imi","Nose","Body"],
  ["Otu","One","Numbers"],["Abụọ","Two","Numbers"],["Atọ","Three","Numbers"],["Anọ","Four","Numbers"],["Ise","Five","Numbers"],["Isii","Six","Numbers"],["Asaa","Seven","Numbers"],["Asatọ","Eight","Numbers"],["Itoolu","Nine","Numbers"],["Iri","Ten","Numbers"],
  ["Nkịta","Dog","Animals"],["Ọkụkọ","Chicken","Animals"],["Ewu","Goat","Animals"],["Ehi","Cow","Animals"],["Nnụnụ","Bird","Animals"],["Agwọ","Snake","Animals"],["Enwe","Monkey","Animals"],["Pusi","Cat","Animals"],
+ ["Ego ole?","How much is it?","Market"],["Ọ dị oke ọnụ","It's too expensive","Market"],["Biko, belata ya","Please reduce the price","Market"],["Achọrọ m nke a","I want this one","Market"],["Ahịa","Market","Market"],["Nye m","Give me","Market"],
+ ["Ebee ka ọ dị?","Where is it?","Getting around"],["Kwụsị ebe a","Stop here","Getting around"],["Gaa n'ihu","Go straight ahead","Getting around"],["Jiri nwayọọ","Slow down","Getting around"],["Ụlọ ọgwụ","Hospital","Getting around"],["Nyere m aka!","Help me!","Getting around"],["Ụlọ nri","Restaurant","Getting around"],
+ ["Aha m bụ…","My name is…","Small talk"],["Kedu aha gị?","What is your name?","Small talk"],["Ee","Yes","Small talk"],["Mba","No","Small talk"],["Daalụ nke ukwuu","Thank you very much","Small talk"],["Biko, kwuo ya ọzọ","Please say it again","Small talk"],["A na m asụ ntakịrị Igbo","I speak a little Igbo","Small talk"],["Agụụ na-agụ m","I'm hungry","Small talk"],["Ka emesịa","See you later","Small talk"],
  ["Ụlọ","House","Around us"],["Ego","Money","Around us"],["Akwụkwọ","Book","Around us"],["Ụgbọala","Car","Around us"],["Osisi","Tree","Around us"],["Anwụ","Sun","Around us"],["Ọnwa","Moon","Around us"],["Kpakpando","Star","Around us"]
 ].map(([i,e,c])=>({i,e,c}));
-const CATS=["Everything",...new Set(WORDS.map(w=>w.c))];
+const TRAVEL=["Market","Getting around","Small talk"];
+const CATS=["Everything","Traveler mode",...new Set(WORDS.map(w=>w.c))];
+const inCat=(w,c)=>c==="Everything"||(c==="Traveler mode"?TRAVEL.includes(w.c):w.c===c);
 const PRAISE=["Ezigbo nwa! That's my child.","Jisie ike! Grandma is dancing in the village.","Ehen! Now you're talking.","See brain! I'm calling your uncle to brag.","Correct! You'll get extra meat in your soup tonight.","Chineke! Who taught you? Oh yes, me."];
 const STREAK=["Three in a row! Are you sure you were born abroad?","Look at you! I'll tell the whole WhatsApp group.","Ah-ah! Is it Igbo you're dreaming in now?"];
 const SCOLD=["Ehn?! After all the school fees?","Who taught you this? Not me o.","Is it English you'll speak in the village?","Your grandmother just called. She's disappointed.","The slipper is warming up, my friend.","Ah! You want to disgrace me in front of Aunty?"];
@@ -186,7 +204,7 @@ const shuffle=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(M
 let cat="Everything",S=null,timer=null,lock=false,last=null;
 const getBest=()=>{try{return +localStorage.getItem("nneBest")||0}catch(e){return 0}};
 const setBest=v=>{try{localStorage.setItem("nneBest",v)}catch(e){}};
-const show=id=>["start","play","end"].forEach(s=>$(s).classList.toggle("hidden",s!==id));
+const show=id=>["start","play","end","book"].forEach(s=>$(s).classList.toggle("hidden",s!==id));
 function drawChips(){$("chips").innerHTML=CATS.map(c=>`<button class="chip" aria-pressed="${c===cat}" data-c="${c}">${c}</button>`).join("");
  const b=getBest();$("bestStart").textContent=b?`Your best: ${b}`:""}
 function drawLives(){$("lives").innerHTML=[0,1,2].map(n=>`<svg viewBox="0 0 110 44" class="${n<S.lives?"":"gone"}"><use href="#slip"/></svg>`).join("")}
@@ -195,7 +213,7 @@ function hud(){$("score").textContent=S.score;$("mult").textContent="x"+mult();d
 function start(){S={score:0,streak:0,lives:3,t0:performance.now(),seen:0,right:0,missed:new Map(),good:new Map()};
  show("play");$("mama").dataset.mood="calm";$("bubble").textContent="Oya, let's see what you know.";hud();next();
  clearInterval(timer);timer=setInterval(()=>{const left=ROUND-(performance.now()-S.t0)/1000;$("bar").style.width=Math.max(0,left/ROUND*100)+"%";if(left<=0)finish("time")},100)}
-function next(){lock=false;const pool=cat==="Everything"?WORDS:WORDS.filter(w=>w.c===cat);
+function next(){lock=false;const pool=WORDS.filter(w=>inCat(w,cat));
  let w;do{w=pick(pool)}while(w===last&&pool.length>1);last=w;
  const dir=Math.random()<.65?"ie":"ei";
  const opts=shuffle([w,...shuffle(WORDS.filter(x=>x.c===w.c&&x!==w)).slice(0,3)]);
@@ -223,6 +241,15 @@ function finish(why){if(!S||$("play").classList.contains("hidden"))return;clearI
  $("copied").textContent="";show("end")}
 $("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;cat=b.dataset.c;drawChips()});
 $("end").addEventListener("click",e=>{const b=e.target.closest(".say");if(b)sayWord({i:b.dataset.w})});
+const ORDER=[...TRAVEL,...new Set(WORDS.map(w=>w.c).filter(c=>!TRAVEL.includes(c)))];
+const esc=t=>t.replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+function drawBook(){const q=$("find").value.trim().toLowerCase(),hit=w=>!q||w.e.toLowerCase().includes(q)||slug(w.i).replace(/-/g," ").includes(slug(q).replace(/-/g," "));
+ const html=ORDER.map(c=>{const ws=WORDS.filter(w=>w.c===c&&hit(w));return ws.length?`<div class="grp">${c}</div>`+ws.map(w=>`<div class="ph"><b>${w.i}</b><span>${w.e}</span><button class="say" data-w="${esc(w.i)}">Hear it</button></div>`).join(""):""}).join("");
+ $("bookList").innerHTML=html||`<p class="sub">Nothing yet for “${esc(q)}”. Mama is still teaching that one.</p>`}
+$("openBook").addEventListener("click",()=>{$("find").value="";drawBook();show("book")});
+$("closeBook").addEventListener("click",()=>show("start"));
+$("find").addEventListener("input",drawBook);
+$("bookList").addEventListener("click",e=>{const b=e.target.closest(".say");if(b)sayWord({i:b.dataset.w})});
 $("go").addEventListener("click",start);$("again").addEventListener("click",start);
 $("home").addEventListener("click",()=>{drawChips();show("start")});
 $("opts").addEventListener("click",e=>{const b=e.target.closest(".opt");if(b)answer(+b.dataset.k)});
