@@ -277,9 +277,16 @@ const STREAK=["Three in a row! Are you sure you were born abroad?","Look at you!
 const SCOLD=["Ehn?! After all the school fees?","Who taught you this? Not me o.","Is it English you'll speak in the village?","Your grandmother just called. She's disappointed.","The slipper is warming up, my friend.","Ah! You want to disgrace me in front of Aunty?"];
 const slug=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 let clip=null;
-function play(path){try{if(clip)clip.pause();clip=new Audio(path);const p=clip.play();if(p)p.catch(()=>{})}catch(e){}}
-const sayWord=w=>play(`audio/words/${slug(w.i)}.mp3`);
-const sayLine=(kind,arr,line)=>play(`audio/mama/${kind}-${arr.indexOf(line)+1}.mp3`);
+/* play() resolves when the clip ends, fails, or is cut off by another clip, so the game can wait for Mama to finish. */
+function play(path){return new Promise(res=>{try{if(clip&&clip._fin)clip._fin();if(clip)clip.pause();
+ const a=new Audio(path);clip=a;let done=false;const fin=()=>{if(!done){done=true;a._fin=null;res()}};a._fin=fin;
+ a.onended=fin;a.onerror=fin;const p=a.play();if(p)p.catch(fin);setTimeout(fin,9000)}catch(e){res()}})}
+const wordPath=t=>`audio/words/${slug(t)}.mp3`,linePath=(kind,arr,line)=>`audio/mama/${kind}-${arr.indexOf(line)+1}.mp3`;
+const sayWord=w=>play(wordPath(w.i));
+const sayLine=(kind,arr,line)=>play(linePath(kind,arr,line));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+/* Speak clips one after another, then pause briefly. min = shortest wait (used when sound is off or missing). */
+const speak=(paths,min)=>Promise.all([paths.reduce((p,x)=>p.then(()=>play(x)),Promise.resolve()),wait(min||900)]).then(()=>wait(400));
 const ROUND=60,$=id=>document.getElementById(id),pick=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a};
 let cat="Everything",S=null,timer=null,lock=false,last=null;
@@ -302,13 +309,15 @@ function next(){lock=false;const pool=WORDS.filter(w=>inCat(w,cat));
  $("q").innerHTML=dir==="ie"?`What does this mean?<span class="igbo">${w.i}</span><button class="say" id="say">Hear it</button>`:`How do you say <b>“${w.e}”</b> in Igbo?`;
  if(dir==="ie"){$("say").onclick=()=>sayWord(w);sayWord(w)}
  $("opts").innerHTML=opts.map((o,k)=>`<button class="opt" data-k="${k}"><kbd>${k+1}</kbd><span>${dir==="ie"?o.e:o.i}</span></button>`).join("")}
-function answer(k){if(lock||!S)return;lock=true;const {w,opts}=S.cur,btns=[...$("opts").children],ok=opts[k]===w;S.seen++;
+function resume(){if(S&&S.pauseAt){S.t0+=performance.now()-S.pauseAt;S.pauseAt=0}}
+function answer(k){if(lock||!S)return;lock=true;const me=S,live=()=>S===me&&!$("play").classList.contains("hidden");S.pauseAt=performance.now();const {w,opts}=S.cur,btns=[...$("opts").children],ok=opts[k]===w;S.seen++;
  btns.forEach((b,n)=>{b.disabled=true;if(opts[n]===w)b.classList.add("right")});
  if(ok){S.right++;S.streak++;S.score+=10*mult();S.good.set(w.i,w);
-  const st=S.streak%3===0,ln=st?pick(STREAK):pick(PRAISE);$("mama").dataset.mood="happy";$("bubble").textContent=ln;if(S.cur.dir==="ei")sayWord(w);else sayLine(st?"streak":"praise",st?STREAK:PRAISE,ln);hud();setTimeout(next,st?1600:900)}
+  const st=S.streak%3===0,ln=st?pick(STREAK):pick(PRAISE);$("mama").dataset.mood="happy";$("bubble").textContent=ln;hud();
+  speak(S.cur.dir==="ei"?[wordPath(w.i)]:[linePath(st?"streak":"praise",st?STREAK:PRAISE,ln)],st?1600:900).then(()=>{if(live()){resume();next()}})}
  else{btns[k].classList.add("wrong");S.streak=0;S.lives--;S.missed.set(w.i,w);
-  const sc=pick(SCOLD);$("mama").dataset.mood="mad";$("bubble").textContent=`${sc} ${w.i} means “${w.e}”.`;sayLine("scold",SCOLD,sc);setTimeout(()=>sayWord(w),1300);hud();throwSlipper();
-  setTimeout(()=>{if(S.lives>0)return next();if(S.revived)return finish("lives");S.pauseAt=performance.now();offerSlipper(()=>{S.t0+=performance.now()-S.pauseAt;S.pauseAt=0;S.revived=true;S.lives=1;hud();$("bubble").textContent="One more slipper. Don't waste it.";next()},()=>{S.pauseAt=0;finish("lives")})},2400)}}
+  const sc=pick(SCOLD);$("mama").dataset.mood="mad";$("bubble").textContent=`${sc} ${w.i} means “${w.e}”.`;hud();throwSlipper();
+  speak([linePath("scold",SCOLD,sc),wordPath(w.i)],2400).then(()=>{if(!live())return;resume();if(S.lives>0)return next();if(S.revived)return finish("lives");S.pauseAt=performance.now();offerSlipper(()=>{S.t0+=performance.now()-S.pauseAt;S.pauseAt=0;S.revived=true;S.lives=1;hud();$("bubble").textContent="One more slipper. Don't waste it.";next()},()=>{S.pauseAt=0;finish("lives")})})}}
 function throwSlipper(){const s=$("slipper"),c=$("cab");s.classList.remove("fly");c.classList.remove("shake");void s.offsetWidth;s.classList.add("fly");c.classList.add("shake")}
 function finish(why){if(!S||$("play").classList.contains("hidden"))return;clearInterval(timer);
  const best=Math.max(getBest(),S.score);setBest(best);
@@ -374,14 +383,16 @@ function renderPractice(){const it=L.u.items,k=L.queue[0],w=it[k],dir=Math.rando
  $("lBody").innerHTML=`<div class="q">${dir==="ie"?`What does this mean?<span class="igbo">${w[0]}</span><button class="say" data-w="${esc(w[0])}">Hear it</button>`:`How do you say <b>“${w[1]}”</b> in Igbo?`}</div>
  <div class="opts">${opts.map((o,n)=>`<button class="opt" data-act="opt" data-n="${n}"><kbd>${n+1}</kbd><span>${dir==="ie"?it[o][1]:it[o][0]}</span></button>`).join("")}</div>`;
  if(dir==="ie")say1(w[0])}
-function loseLife(after){L.lives--;lLives();throwSlipper();
- if(L.lives>0)return setTimeout(after,1500);
- setTimeout(()=>{if(!L.revived)offerSlipper(()=>{L.revived=true;L.lives=1;lLives();lb("One more slipper. Don't waste it.","calm");after()},retryUnit);else retryUnit()},1200)}
+function loseLife(after,talk){const me=L,live=()=>L===me&&!$("lesson").classList.contains("hidden");L.lives--;lLives();throwSlipper();
+ const t=talk||wait(1500);
+ if(L.lives>0)return t.then(()=>{if(live())after()});
+ t.then(()=>{if(!live())return;if(!L.revived)offerSlipper(()=>{L.revived=true;L.lives=1;lLives();lb("One more slipper. Don't waste it.","calm");after()},retryUnit);else retryUnit()})}
 function retryUnit(){lb("We start this practice again. Mama is patient… small small.","mad");L.lives=3;L.revived=false;lLives();L.step="learn";nextStep()}
 function pickOpt(n){if(L.lock)return;L.lock=true;const {k,opts}=L.cur,w=L.u.items[k],btns=[...document.querySelectorAll("#lBody .opt")];
  btns.forEach((b,j)=>{b.disabled=true;if(opts[j]===k)b.classList.add("right")});
- if(opts[n]===k){L.queue.shift();const ln=pick(PRAISE);lb(ln,"happy");sayLine("praise",PRAISE,ln);setTimeout(()=>L.queue.length?renderPractice():nextStep(),900)}
- else{btns[n].classList.add("wrong");L.queue.push(L.queue.shift());const sc=pick(SCOLD);lb(`${sc} ${w[0]} means “${w[1]}”.`,"mad");sayLine("scold",SCOLD,sc);loseLife(renderPractice)}}
+ const me=L,live=()=>L===me&&!$("lesson").classList.contains("hidden");
+ if(opts[n]===k){L.queue.shift();const ln=pick(PRAISE);lb(ln,"happy");speak([linePath("praise",PRAISE,ln)]).then(()=>{if(live())L.queue.length?renderPractice():nextStep()})}
+ else{btns[n].classList.add("wrong");L.queue.push(L.queue.shift());const sc=pick(SCOLD);lb(`${sc} ${w[0]} means “${w[1]}”.`,"mad");loseLife(renderPractice,speak([linePath("scold",SCOLD,sc),wordPath(w[0])],2000))}}
 function renderBuild(){const [s,e]=L.u.build[L.b];L.words=s.split(" ");L.pool=shuffle(L.words.map((t,id)=>({t,id})));L.picked=[];L.lock=false;
  $("stepName").textContent=`Build · ${L.b+1} of ${L.u.build.length}`;lBar(2/3+L.b/L.u.build.length/3);drawBuild(e)}
 function drawBuild(e){e=e||L.u.build[L.b][1];
@@ -389,9 +400,10 @@ function drawBuild(e){e=e||L.u.build[L.b][1];
  <div class="pool">${L.pool.filter(p=>!L.picked.includes(p)).map(p=>`<button class="tile" data-act="pick" data-id="${p.id}">${p.t}</button>`).join("")}</div>
  <div class="row nav"><button class="btn" data-act="check"${L.picked.length===L.words.length?"":" disabled"}>Check</button></div>`}
 function checkBuild(){if(L.lock)return;L.lock=true;const [s]=L.u.build[L.b];
- if(L.picked.map(p=>p.t).join(" ")===s){const ln=pick(PRAISE);lb(ln,"happy");sayLine("praise",PRAISE,ln);say1(s);
-  setTimeout(()=>{L.b++;L.b<L.u.build.length?renderBuild():nextStep()},1300)}
- else{const sc=pick(SCOLD);lb(`${sc} It's “${s}”.`,"mad");sayLine("scold",SCOLD,sc);loseLife(renderBuild)}}
+ const me=L,live=()=>L===me&&!$("lesson").classList.contains("hidden");
+ if(L.picked.map(p=>p.t).join(" ")===s){const ln=pick(PRAISE);lb(ln,"happy");
+  speak([linePath("praise",PRAISE,ln),wordPath(s)],1300).then(()=>{if(live()){L.b++;L.b<L.u.build.length?renderBuild():nextStep()}})}
+ else{const sc=pick(SCOLD);lb(`${sc} It's “${s}”.`,"mad");loseLife(renderBuild,speak([linePath("scold",SCOLD,sc),wordPath(s)],2000))}}
 function renderTalk(){$("stepName").textContent="Talk";lBar(.95);
  $("lBody").innerHTML=`<div class="convo">${L.u.talk.map(([who,i,e])=>`<div class="line ${who==="A"?"a":"b"}"><b>${i}</b><span>${e}</span><button class="say" data-w="${esc(i)}">Hear it</button></div>`).join("")}</div>
  <div class="row nav"><button class="btn" data-act="finish">Finish unit</button></div>`}
