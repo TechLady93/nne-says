@@ -59,6 +59,24 @@ body:not(.audio) .say{display:none}
 .grp{margin:18px 0 6px;font:800 18px "Baloo 2",sans-serif;color:var(--coral)}
 .ph{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:10px 0;border-bottom:1px solid var(--line)}
 .ph b{font:800 21px "Baloo 2",sans-serif;color:var(--green2);flex:1 1 200px}.ph span{flex:1 1 180px}.ph .say{margin:0}
+.modal{position:absolute;inset:0;z-index:9;background:rgba(10,20,15,.55);display:grid;place-items:center;padding:18px}
+.sheet{background:var(--card);border-radius:22px;padding:24px;max-width:440px;box-shadow:0 0 0 4px var(--gold)}
+.prem{margin:14px 0 0;font-size:14px;color:var(--soft)}
+.meter{height:12px;border-radius:99px;background:var(--line);overflow:hidden;margin:16px 0 4px}.meter i{display:block;height:100%;background:var(--green);border-radius:99px}
+.units{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:10px}
+.unit{width:100%;display:flex;align-items:center;gap:14px;text-align:left;min-height:64px;padding:10px 14px;border-radius:18px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:16px Nunito,sans-serif}
+.unit:hover:not(:disabled){border-color:var(--green2)}.unit:disabled{opacity:.45;cursor:not-allowed}
+.unit .num{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font:800 19px "Baloo 2",sans-serif;background:var(--gold);color:#1d1a12}
+.unit.done .num{background:var(--green);color:#fff}.unit .ut{flex:1;display:flex;flex-direction:column}.unit small{color:var(--soft);font-size:14px}
+.tag{flex:none;font:800 12px Nunito,sans-serif;padding:3px 9px;border-radius:99px;background:var(--coral);color:#fff}
+.step{font:800 15px Nunito,sans-serif;color:var(--soft)}
+.card{text-align:center;padding:22px 12px;margin:16px 0;border-radius:20px;background:var(--bg)}.card .en{font-size:20px;font-weight:700;margin:.3em 0}
+.nav{justify-content:center;margin-top:14px}
+.answer,.pool{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:56px;padding:10px;border-radius:16px}
+.answer{border:2px dashed var(--line);margin-bottom:10px}.hint{color:var(--soft);align-self:center}
+.tile{font:800 20px "Baloo 2",sans-serif;min-height:48px;padding:6px 16px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.convo{display:grid;gap:10px;margin:14px 0}.line{max-width:85%;padding:10px 14px;border-radius:16px;background:var(--bg);display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.line.b{justify-self:end;background:var(--ok)}.line b{font:800 20px "Baloo 2",sans-serif;color:var(--green2)}.line .say{margin-top:4px}
 .mission{margin:.7em 0 0;font-weight:800;color:var(--coral)}
 .say{font:800 15px Nunito,sans-serif;min-height:44px;padding:6px 14px;margin-top:8px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
 .q{text-align:center;margin:20px 0 14px;font-size:19px}
@@ -128,7 +146,7 @@ body:not(.audio) .say{display:none}
   <svg class="mama" viewBox="0 0 120 130" data-mood="happy" role="img" aria-label="Mama in a gold gele, smiling"><use href="#mamaArt"/></svg>
  </div>
  <div class="chips" id="chips" role="group" aria-label="Choose a topic"></div>
- <div class="row"><button class="btn" id="go">Play</button><button class="btn alt" id="openBook">Phrasebook</button><span class="toast" id="bestStart"></span></div>
+ <div class="row"><button class="btn" id="openPath">Lessons</button><button class="btn alt" id="go">Quick play</button><button class="btn alt" id="openBook">Phrasebook</button><span class="toast" id="bestStart"></span></div>
  <ul class="how">
   <li><b>Right answers</b> build a streak; every 3 in a row raises your multiplier (up to x4).</li>
   <li><b>Wrong answers</b> cost a slipper. Lose all 3 and Mama ends the lesson.</li>
@@ -148,6 +166,20 @@ body:not(.audio) .say{display:none}
  </div>
  <div class="q" id="q"></div>
  <div class="opts" id="opts"></div>
+</section>
+
+<section id="path" class="hidden">
+ <div class="hud"><h2>Lessons</h2><button class="btn alt" id="closePath">Back</button></div>
+ <p class="sub">Ten short units, from “Ndewo” to your first real conversation. Finish one to unlock the next.</p>
+ <div class="meter" aria-hidden="true"><i id="pathBar"></i></div><p class="sub" id="pathCount"></p>
+ <ol class="units" id="units"></ol>
+</section>
+
+<section id="lesson" class="hidden">
+ <div class="hud"><button class="btn alt" id="quitLesson">Exit</button><span class="step" id="stepName"></span><div class="lives" id="lLives" aria-label="Slippers left"></div></div>
+ <div class="timer" aria-hidden="true"><i id="lBar"></i></div>
+ <div class="talk"><svg class="mama" id="lMama" viewBox="0 0 120 130" data-mood="calm" aria-hidden="true"><use href="#mamaArt"/></svg><div class="bubble" id="lBubble" aria-live="polite"></div></div>
+ <div id="lBody"></div>
 </section>
 
 <section id="book" class="hidden">
@@ -171,6 +203,13 @@ body:not(.audio) .say{display:none}
  <div class="row"><button class="btn" id="again">Play again</button><button class="btn alt" id="share">Copy score to share</button><button class="btn alt" id="home">Change topic</button></div>
  <p class="toast" id="copied" aria-live="polite"></p>
 </section>
+<div class="modal hidden" id="adModal" role="dialog" aria-modal="true" aria-labelledby="adTitle"><div class="sheet">
+ <h2 id="adTitle">Mama is out of slippers!</h2>
+ <p class="sub">Watch a short ad to borrow one more slipper and keep going.</p>
+ <div class="row" style="margin-top:16px"><button class="btn" id="adWatch">Watch ad for 1 slipper</button><button class="btn alt" id="adSkip">No thanks</button></div>
+ <p class="prem"><b>Nne Says! Premium</b> (coming soon): unlimited slippers, no ads, every unit.</p>
+ <p class="prem">This is a sample ad break. The app will show a real ad here.</p>
+</div></div>
 <p class="note">Prototype vocabulary in standard Igbo, written by an AI. A native speaker needs to check spelling, tone marks and dialect before launch.</p>
 </div>
 </div>
@@ -188,8 +227,50 @@ const WORDS=[
  ["Aha m bụ…","My name is…","Small talk"],["Kedu aha gị?","What is your name?","Small talk"],["Ee","Yes","Small talk"],["Mba","No","Small talk"],["Daalụ nke ukwuu","Thank you very much","Small talk"],["Biko, kwuo ya ọzọ","Please say it again","Small talk"],["A na m asụ ntakịrị Igbo","I speak a little Igbo","Small talk"],["Agụụ na-agụ m","I'm hungry","Small talk"],["Ka emesịa","See you later","Small talk"],
  ["Ụlọ","House","Around us"],["Ego","Money","Around us"],["Akwụkwọ","Book","Around us"],["Ụgbọala","Car","Around us"],["Osisi","Tree","Around us"],["Anwụ","Sun","Around us"],["Ọnwa","Moon","Around us"],["Kpakpando","Star","Around us"]
 ].map(([i,e,c])=>({i,e,c}));
+const UNITS=[
+ {id:"u1",t:"Greetings",g:"Greet anyone, morning to night",m:"First thing: we greet. An Igbo child greets everybody, even the goat.",
+  items:[["Ndewo","Hello"],["Kedu?","How are you?"],["Ọ dị mma","I'm fine / It's good"],["Ụtụtụ ọma","Good morning"],["Ehihie ọma","Good afternoon"],["Mgbede ọma","Good evening"],["Ka chi fọọ","Good night"],["Daalụ","Thank you"],["Ka ọ dị","Goodbye"]],
+  build:[["Ụtụtụ ọma","Good morning"],["Ọ dị mma","I'm fine"]],
+  talk:[["A","Ndewo!","Hello!"],["B","Ndewo! Kedu?","Hello! How are you?"],["A","Ọ dị mma. Daalụ.","I'm fine. Thank you."],["B","Ka ọ dị!","Goodbye!"]]},
+ {id:"u2",t:"Manners",g:"Please, sorry and the words that save you",m:"Manners first. Say 'biko' and people will help you anywhere.",
+  items:[["Biko","Please"],["Daalụ nke ukwuu","Thank you very much"],["Ndo","Sorry"],["Nnọọ","Welcome"],["Ee","Yes"],["Mba","No"],["Amaghị m","I don't know"],["Aghọtaghị m","I don't understand"],["Biko, kwuo ya ọzọ","Please say it again"]],
+  build:[["Biko kwuo ya ọzọ","Please say it again"],["Daalụ nke ukwuu","Thank you very much"]],
+  talk:[["A","Nnọọ!","Welcome!"],["B","Daalụ nke ukwuu.","Thank you very much."],["A","Ị chọrọ mmiri?","Do you want water?"],["B","Ee, biko.","Yes, please."]]},
+ {id:"u3",t:"All about me",g:"Your name, where you're from",m:"When Aunty asks who you are, you will answer in Igbo. Not English.",
+  items:[["Aha m bụ…","My name is…"],["Kedu aha gị?","What is your name?"],["Abụ m onye Igbo","I am Igbo"],["Abụ m onye America","I am American"],["Ebee ka ị si?","Where are you from?"],["A na m asụ ntakịrị Igbo","I speak a little Igbo"],["Afọ ole ka ị dị?","How old are you?"]],
+  build:[["Aha m bụ Chioma","My name is Chioma"],["Abụ m onye Igbo","I am Igbo"]],
+  talk:[["A","Kedu aha gị?","What is your name?"],["B","Aha m bụ Chioma.","My name is Chioma."],["A","Ebee ka ị si?","Where are you from?"],["B","Abụ m onye Igbo. A na m asụ ntakịrị Igbo.","I am Igbo. I speak a little Igbo."]]},
+ {id:"u4",t:"Family",g:"Mum, dad, brothers, sisters",m:"Family is everything. Learn their names before they visit.",
+  items:[["Nne m","My mother"],["Nna m","My father"],["Nwanne m nwoke","My brother"],["Nwanne m nwaanyị","My sister"],["Nne nne m","My grandmother"],["Nna nna m","My grandfather"],["Ezinụlọ","Family"],["Nwa","Child"]],
+  build:[["Nne m nọ n'ụlọ","My mother is at home"]],
+  talk:[["A","Kedu ka ezinụlọ gị mere?","How is your family?"],["B","Ha dị mma. Daalụ.","They are fine. Thank you."]]},
+ {id:"u5",t:"Numbers",g:"Count from one to a hundred",m:"Count with me. You cannot bargain in the market if you cannot count.",
+  items:[["Otu","One"],["Abụọ","Two"],["Atọ","Three"],["Anọ","Four"],["Ise","Five"],["Isii","Six"],["Asaa","Seven"],["Asatọ","Eight"],["Itoolu","Nine"],["Iri","Ten"],["Iri na otu","Eleven"],["Iri abụọ","Twenty"],["Narị","One hundred"]],
+  build:[],talk:[]},
+ {id:"u6",t:"Food",g:"Eat, drink and compliment the cook",m:"If you don't praise my soup in Igbo, you will wash the plates.",
+  items:[["Nri","Food"],["Mmiri","Water"],["Ji","Yam"],["Ofe","Soup"],["Agụụ na-agụ m","I'm hungry"],["Achọrọ m iri nri","I want to eat"],["Nye m mmiri","Give me water"],["Nri a tọrọ ụtọ","This food is delicious"]],
+  build:[["Nye m mmiri","Give me water"],["Achọrọ m iri nri","I want to eat"]],
+  talk:[["A","Agụụ na-agụ m.","I'm hungry."],["B","Nri dị. Rie!","There's food. Eat!"],["A","Nri a tọrọ ụtọ!","This food is delicious!"]]},
+ {id:"u7",t:"At the market",g:"Ask the price and bargain",m:"Never accept the first price. Never. I didn't raise you like that.",
+  items:[["Ahịa","Market"],["Ego ole?","How much is it?"],["Ọ dị oke ọnụ","It's too expensive"],["Biko, belata ya","Please reduce the price"],["Achọrọ m nke a","I want this one"],["Nye m","Give me"],["Ego","Money"]],
+  build:[["Biko belata ya","Please reduce the price"],["Achọrọ m nke a","I want this one"]],
+  talk:[["A","Ego ole?","How much is it?"],["B","Naịra puku abụọ.","Two thousand naira."],["A","Ọ dị oke ọnụ. Biko, belata ya.","It's too expensive. Please reduce the price."],["B","Ọ dị mma.","Okay."]]},
+ {id:"u8",t:"Getting around",g:"Taxis, directions and help",m:"Tell the driver where to stop, or you will end up in Onitsha.",
+  items:[["Ebee ka ọ dị?","Where is it?"],["Kwụsị ebe a","Stop here"],["Gaa n'ihu","Go straight ahead"],["Jiri nwayọọ","Slow down"],["Ụlọ ọgwụ","Hospital"],["Ụlọ nri","Restaurant"],["Nyere m aka!","Help me!"]],
+  build:[["Kwụsị ebe a","Stop here"],["Jiri nwayọọ","Slow down"]],
+  talk:[["A","Ebee ka ụlọ nri dị?","Where is the restaurant?"],["B","Gaa n'ihu.","Go straight ahead."],["A","Daalụ!","Thank you!"]]},
+ {id:"u9",t:"Time and days",g:"Today, tomorrow, see you later",m:"Tomorrow, tomorrow. Today we learn time.",
+  items:[["Taa","Today"],["Echi","Tomorrow"],["Ụnyaahụ","Yesterday"],["Ugbu a","Now"],["Ka emesịa","See you later"],["Ka ọ dị echi","See you tomorrow"]],
+  build:[["Ka ọ dị echi","See you tomorrow"]],
+  talk:[["A","Ị ga-abịa echi?","Will you come tomorrow?"],["B","Ee. Ka ọ dị echi!","Yes. See you tomorrow!"]]},
+ {id:"u10",t:"How you feel",g:"Happy, tired, not feeling well",m:"Last unit. Tell Mama how you feel, in Igbo, like a proper child.",
+  items:[["Obi dị m ụtọ","I'm happy"],["Ike gwụrụ m","I'm tired"],["Isi na-awa m","My head hurts"],["Afọ na-egbu m","My stomach hurts"],["Ahụ adịghị m mma","I don't feel well"],["Ọ dị m mma","I'm well"]],
+  build:[["Ike gwụrụ m","I'm tired"],["Obi dị m ụtọ","I'm happy"]],
+  talk:[["A","Kedu ka ị mere?","How are you doing?"],["B","Ike gwụrụ m, mana obi dị m ụtọ.","I'm tired, but I'm happy."],["A","Ezigbo nwa! Jisie ike.","Good child! Keep it up."]]}
+];
+{const have=new Set(WORDS.map(w=>w.i));UNITS.forEach(u=>u.items.forEach(([i,e])=>{if(!have.has(i)){have.add(i);WORDS.push({i,e,c:u.t})}}))}
 const TRAVEL=["Market","Getting around","Small talk"];
-const CATS=["Everything","Traveler mode",...new Set(WORDS.map(w=>w.c))];
+const CATS=["Everything","Traveler mode","Greetings","Family","Food","Body","Numbers","Animals","Around us"];
 const inCat=(w,c)=>c==="Everything"||(c==="Traveler mode"?TRAVEL.includes(w.c):w.c===c);
 const PRAISE=["Ezigbo nwa! That's my child.","Jisie ike! Grandma is dancing in the village.","Ehen! Now you're talking.","See brain! I'm calling your uncle to brag.","Correct! You'll get extra meat in your soup tonight.","Chineke! Who taught you? Oh yes, me."];
 const STREAK=["Three in a row! Are you sure you were born abroad?","Look at you! I'll tell the whole WhatsApp group.","Ah-ah! Is it Igbo you're dreaming in now?"];
@@ -204,7 +285,7 @@ const shuffle=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(M
 let cat="Everything",S=null,timer=null,lock=false,last=null;
 const getBest=()=>{try{return +localStorage.getItem("nneBest")||0}catch(e){return 0}};
 const setBest=v=>{try{localStorage.setItem("nneBest",v)}catch(e){}};
-const show=id=>["start","play","end","book"].forEach(s=>$(s).classList.toggle("hidden",s!==id));
+const show=id=>["start","play","end","book","path","lesson"].forEach(s=>$(s).classList.toggle("hidden",s!==id));
 function drawChips(){$("chips").innerHTML=CATS.map(c=>`<button class="chip" aria-pressed="${c===cat}" data-c="${c}">${c}</button>`).join("");
  const b=getBest();$("bestStart").textContent=b?`Your best: ${b}`:""}
 function drawLives(){$("lives").innerHTML=[0,1,2].map(n=>`<svg viewBox="0 0 110 44" class="${n<S.lives?"":"gone"}"><use href="#slip"/></svg>`).join("")}
@@ -212,7 +293,7 @@ function mult(){return Math.min(1+Math.floor(S.streak/3),4)}
 function hud(){$("score").textContent=S.score;$("mult").textContent="x"+mult();drawLives()}
 function start(){S={score:0,streak:0,lives:3,t0:performance.now(),seen:0,right:0,missed:new Map(),good:new Map()};
  show("play");$("mama").dataset.mood="calm";$("bubble").textContent="Oya, let's see what you know.";hud();next();
- clearInterval(timer);timer=setInterval(()=>{const left=ROUND-(performance.now()-S.t0)/1000;$("bar").style.width=Math.max(0,left/ROUND*100)+"%";if(left<=0)finish("time")},100)}
+ clearInterval(timer);timer=setInterval(()=>{if(S.pauseAt)return;const left=ROUND-(performance.now()-S.t0)/1000;$("bar").style.width=Math.max(0,left/ROUND*100)+"%";if(left<=0)finish("time")},100)}
 function next(){lock=false;const pool=WORDS.filter(w=>inCat(w,cat));
  let w;do{w=pick(pool)}while(w===last&&pool.length>1);last=w;
  const dir=Math.random()<.65?"ie":"ei";
@@ -227,7 +308,7 @@ function answer(k){if(lock||!S)return;lock=true;const {w,opts}=S.cur,btns=[...$(
   const st=S.streak%3===0,ln=st?pick(STREAK):pick(PRAISE);$("mama").dataset.mood="happy";$("bubble").textContent=ln;if(S.cur.dir==="ei")sayWord(w);else sayLine(st?"streak":"praise",st?STREAK:PRAISE,ln);hud();setTimeout(next,st?1600:900)}
  else{btns[k].classList.add("wrong");S.streak=0;S.lives--;S.missed.set(w.i,w);
   const sc=pick(SCOLD);$("mama").dataset.mood="mad";$("bubble").textContent=`${sc} ${w.i} means “${w.e}”.`;sayLine("scold",SCOLD,sc);setTimeout(()=>sayWord(w),1300);hud();throwSlipper();
-  setTimeout(()=>S.lives<=0?finish("lives"):next(),2400)}}
+  setTimeout(()=>{if(S.lives>0)return next();if(S.revived)return finish("lives");S.pauseAt=performance.now();offerSlipper(()=>{S.t0+=performance.now()-S.pauseAt;S.pauseAt=0;S.revived=true;S.lives=1;hud();$("bubble").textContent="One more slipper. Don't waste it.";next()},()=>{S.pauseAt=0;finish("lives")})},2400)}}
 function throwSlipper(){const s=$("slipper"),c=$("cab");s.classList.remove("fly");c.classList.remove("shake");void s.offsetWidth;s.classList.add("fly");c.classList.add("shake")}
 function finish(why){if(!S||$("play").classList.contains("hidden"))return;clearInterval(timer);
  const best=Math.max(getBest(),S.score);setBest(best);
@@ -257,6 +338,84 @@ document.addEventListener("keydown",e=>{if(!$("play").classList.contains("hidden
 $("share").addEventListener("click",()=>{const t=`I scored ${S.score} on Nne Says!, the Igbo slipper game. Can you beat me? #LearnIgbo`;
  const done=m=>$("copied").textContent=m;
  try{navigator.clipboard.writeText(t).then(()=>done("Copied! Paste it into your story or group chat."),()=>done(t))}catch(e){done(t)}});
+/* ---------- Slipper lives: rewarded ad / premium ---------- */
+let adYes=null,adNo=null,adTick=null;
+function offerSlipper(yes,no){adYes=yes;adNo=no;$("adWatch").disabled=false;$("adWatch").textContent="Watch ad for 1 slipper";$("adModal").classList.remove("hidden");$("adWatch").focus()}
+function closeAd(){clearInterval(adTick);$("adModal").classList.add("hidden")}
+$("adWatch").addEventListener("click",()=>{let n=5;const b=$("adWatch");b.disabled=true;b.textContent=`Ad playing… ${n}`;
+ adTick=setInterval(()=>{n--;if(n>0){b.textContent=`Ad playing… ${n}`;return}closeAd();const f=adYes;adYes=adNo=null;if(f)f()},1000)});
+$("adSkip").addEventListener("click",()=>{closeAd();const f=adNo;adYes=adNo=null;if(f)f()});
+
+/* ---------- Lessons ---------- */
+const getProg=()=>{try{return JSON.parse(localStorage.getItem("nneProg")||"[]")}catch(e){return[]}};
+const setProg=p=>{try{localStorage.setItem("nneProg",JSON.stringify(p))}catch(e){}};
+const FREE_UNITS=6;
+let L=null;
+function drawPath(){const done=getProg();
+ $("units").innerHTML=UNITS.map((u,k)=>{const ok=done.includes(u.id),open=ok||k===0||done.includes(UNITS[k-1].id);
+  return `<li><button class="unit${ok?" done":""}" data-k="${k}"${open?"":" disabled"}><span class="num">${ok?"✓":k+1}</span><span class="ut"><b>${u.t}</b><small>${u.g}</small></span>${k>=FREE_UNITS?'<span class="tag">Premium</span>':""}</button></li>`}).join("");
+ const n=UNITS.filter(u=>done.includes(u.id)).length;$("pathBar").style.width=n/UNITS.length*100+"%";$("pathCount").textContent=`${n} of ${UNITS.length} units complete`}
+const say1=t=>sayWord({i:t});
+function lb(text,mood){$("lBubble").textContent=text;$("lMama").dataset.mood=mood||"calm"}
+function lLives(){$("lLives").innerHTML=[0,1,2].map(n=>`<svg viewBox="0 0 110 44" class="${n<L.lives?"":"gone"}"><use href="#slip"/></svg>`).join("")}
+function lBar(f){$("lBar").style.width=Math.round(f*100)+"%"}
+function startUnit(k){L={k,u:UNITS[k],step:"learn",i:0,lives:3,revived:false};show("lesson");lLives();lb(L.u.m,"happy");renderLearn()}
+function nextStep(){const u=L.u;
+ if(L.step==="learn"){L.step="practice";L.queue=shuffle(u.items.map((_,k)=>k));L.total=u.items.length;lb("Now let's see if you were listening.","calm");return renderPractice()}
+ if(L.step==="practice"&&u.build.length){L.step="build";L.b=0;lb("Put the words in the right order. Slowly.","calm");return renderBuild()}
+ if((L.step==="practice"||L.step==="build")&&u.talk.length){L.step="talk";lb("Now we talk like real people. Read it with me.","happy");return renderTalk()}
+ L.step="done";renderDone()}
+function renderLearn(){const it=L.u.items,w=it[L.i];$("stepName").textContent=`Learn · ${L.i+1} of ${it.length}`;lBar(L.i/it.length/3);
+ $("lBody").innerHTML=`<div class="card"><span class="igbo">${w[0]}</span><p class="en">${w[1]}</p><button class="say" data-w="${esc(w[0])}">Hear it</button></div>
+ <div class="row nav"><button class="btn alt" data-act="prev"${L.i?"":" disabled"}>Back</button><button class="btn" data-act="next">${L.i<it.length-1?"Next":"Start practice"}</button></div>`;say1(w[0])}
+function renderPractice(){const it=L.u.items,k=L.queue[0],w=it[k],dir=Math.random()<.6?"ie":"ei";
+ const opts=shuffle([k,...shuffle(it.map((_,j)=>j).filter(j=>j!==k)).slice(0,3)]);L.cur={k,dir,opts};L.lock=false;
+ $("stepName").textContent=`Practice · ${L.total-L.queue.length+1} of ${L.total}`;lBar(1/3+(L.total-L.queue.length)/L.total/3);
+ $("lBody").innerHTML=`<div class="q">${dir==="ie"?`What does this mean?<span class="igbo">${w[0]}</span><button class="say" data-w="${esc(w[0])}">Hear it</button>`:`How do you say <b>“${w[1]}”</b> in Igbo?`}</div>
+ <div class="opts">${opts.map((o,n)=>`<button class="opt" data-act="opt" data-n="${n}"><kbd>${n+1}</kbd><span>${dir==="ie"?it[o][1]:it[o][0]}</span></button>`).join("")}</div>`;
+ if(dir==="ie")say1(w[0])}
+function loseLife(after){L.lives--;lLives();throwSlipper();
+ if(L.lives>0)return setTimeout(after,1500);
+ setTimeout(()=>{if(!L.revived)offerSlipper(()=>{L.revived=true;L.lives=1;lLives();lb("One more slipper. Don't waste it.","calm");after()},retryUnit);else retryUnit()},1200)}
+function retryUnit(){lb("We start this practice again. Mama is patient… small small.","mad");L.lives=3;L.revived=false;lLives();L.step="learn";nextStep()}
+function pickOpt(n){if(L.lock)return;L.lock=true;const {k,opts}=L.cur,w=L.u.items[k],btns=[...document.querySelectorAll("#lBody .opt")];
+ btns.forEach((b,j)=>{b.disabled=true;if(opts[j]===k)b.classList.add("right")});
+ if(opts[n]===k){L.queue.shift();const ln=pick(PRAISE);lb(ln,"happy");sayLine("praise",PRAISE,ln);setTimeout(()=>L.queue.length?renderPractice():nextStep(),900)}
+ else{btns[n].classList.add("wrong");L.queue.push(L.queue.shift());const sc=pick(SCOLD);lb(`${sc} ${w[0]} means “${w[1]}”.`,"mad");sayLine("scold",SCOLD,sc);loseLife(renderPractice)}}
+function renderBuild(){const [s,e]=L.u.build[L.b];L.words=s.split(" ");L.pool=shuffle(L.words.map((t,id)=>({t,id})));L.picked=[];L.lock=false;
+ $("stepName").textContent=`Build · ${L.b+1} of ${L.u.build.length}`;lBar(2/3+L.b/L.u.build.length/3);drawBuild(e)}
+function drawBuild(e){e=e||L.u.build[L.b][1];
+ $("lBody").innerHTML=`<p class="q">Build: <b>“${e}”</b></p><div class="answer" aria-label="Your sentence">${L.picked.map(p=>`<button class="tile" data-act="unpick" data-id="${p.id}">${p.t}</button>`).join("")||'<span class="hint">Tap the words below</span>'}</div>
+ <div class="pool">${L.pool.filter(p=>!L.picked.includes(p)).map(p=>`<button class="tile" data-act="pick" data-id="${p.id}">${p.t}</button>`).join("")}</div>
+ <div class="row nav"><button class="btn" data-act="check"${L.picked.length===L.words.length?"":" disabled"}>Check</button></div>`}
+function checkBuild(){if(L.lock)return;L.lock=true;const [s]=L.u.build[L.b];
+ if(L.picked.map(p=>p.t).join(" ")===s){const ln=pick(PRAISE);lb(ln,"happy");sayLine("praise",PRAISE,ln);say1(s);
+  setTimeout(()=>{L.b++;L.b<L.u.build.length?renderBuild():nextStep()},1300)}
+ else{const sc=pick(SCOLD);lb(`${sc} It's “${s}”.`,"mad");sayLine("scold",SCOLD,sc);loseLife(renderBuild)}}
+function renderTalk(){$("stepName").textContent="Talk";lBar(.95);
+ $("lBody").innerHTML=`<div class="convo">${L.u.talk.map(([who,i,e])=>`<div class="line ${who==="A"?"a":"b"}"><b>${i}</b><span>${e}</span><button class="say" data-w="${esc(i)}">Hear it</button></div>`).join("")}</div>
+ <div class="row nav"><button class="btn" data-act="finish">Finish unit</button></div>`}
+function renderDone(){const p=getProg();if(!p.includes(L.u.id)){p.push(L.u.id);setProg(p)}lBar(1);lLives();
+ const nxt=UNITS[L.k+1];$("stepName").textContent="Unit complete";lb(pick(STREAK),"happy");
+ $("lBody").innerHTML=`<div class="card"><span class="igbo">Jisie ike!</span><p class="en">You finished <b>${L.u.t}</b>: ${L.u.items.length} new words and phrases.</p></div>
+ <div class="row nav">${nxt?`<button class="btn" data-act="nextunit">Next: ${nxt.t}</button>`:""}<button class="btn alt" data-act="path">All lessons</button></div>`}
+$("lBody").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||!L)return;const a=b.dataset.act;
+ if(b.classList.contains("say"))return say1(b.dataset.w);
+ if(a==="next"){L.i<L.u.items.length-1?(L.i++,renderLearn()):nextStep()}
+ else if(a==="prev"){L.i--;renderLearn()}
+ else if(a==="opt")pickOpt(+b.dataset.n);
+ else if(a==="pick"&&!L.lock){L.picked.push(L.pool.find(p=>p.id===+b.dataset.id));drawBuild()}
+ else if(a==="unpick"&&!L.lock){L.picked=L.picked.filter(p=>p.id!==+b.dataset.id);drawBuild()}
+ else if(a==="check")checkBuild();
+ else if(a==="finish")nextStep();
+ else if(a==="nextunit")startUnit(L.k+1);
+ else if(a==="path"){drawPath();show("path")}});
+$("units").addEventListener("click",e=>{const b=e.target.closest(".unit");if(b&&!b.disabled)startUnit(+b.dataset.k)});
+$("openPath").addEventListener("click",()=>{drawPath();show("path")});
+$("closePath").addEventListener("click",()=>show("start"));
+$("quitLesson").addEventListener("click",()=>{drawPath();show("path")});
+document.addEventListener("keydown",e=>{if(L&&!$("lesson").classList.contains("hidden")&&L.step==="practice"&&/^[1-4]$/.test(e.key))pickOpt(+e.key-1)});
+
 drawChips();
 try{const t=new Audio();t.addEventListener("canplaythrough",()=>document.body.classList.add("audio"),{once:true});t.src="audio/words/mmiri.mp3";t.load()}catch(e){}
 }

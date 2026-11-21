@@ -16,13 +16,16 @@ Open `index.html` in a browser. It runs on phones too, with no install.
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | The game (single file: HTML, CSS, JS) |
+| `index.html` | The game (single file: HTML, CSS, JS): Lessons, Quick play, Phrasebook |
+| `APP-STORE-PLAN.md` | How the app passes Apple review, plus monetization setup |
 | `voice-script.csv` | Every word and Mama line to voice, with its target file name |
 | `audio/words/` | One MP3 per Igbo word (e.g. `mmiri.mp3`) |
 | `audio/mama/` | Mama's reactions (`praise-1.mp3`, `scold-3.mp3`, ...) |
 
 ## Roadmap
 
+- [x] 10 lesson units (learn, practice, sentence builder, conversations)
+- [x] Slipper lives with rewarded-ad revive
 - [ ] Native-speaker review of all vocabulary and tone marks
 - [ ] Voice every word and Mama line (ElevenLabs)
 - [ ] Playtest with 20 to 30 people
