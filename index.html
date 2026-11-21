@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nne Says! Igbo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: loud, warm, teasing — a Naija mum who loves you and owns a slipper
+   IDEA: an Ankara wax-print market stall turned arcade cabinet
+   PICTURE: Mama in her gele, reacting to every answer; a slipper that flies when you miss
+   COLOUR and TYPE: Nigerian green field, gele gold, coral accent; Baloo 2 + Nunito (supports ị ọ ụ ṅ)
+   LAYOUT: one game cabinet centred on a full-bleed wax-print band; stacks to one column on phones */
+:root{color-scheme:light dark;
+ --bg:light-dark(#fff8ec,#0c1611);--ink:light-dark(#1d1a12,#f6efe0);--soft:light-dark(#6b6352,#b9b09a);
+ --card:light-dark(#ffffff,#15241c);--line:light-dark(#eadfc8,#2a3d32);
+ --green:#0b6e4f;--green2:light-dark(#0b6e4f,#3fc28d);--gold:#f2b705;--coral:#e4572e;
+ --ok:light-dark(#d9f5e6,#16432f);--bad:light-dark(#fde2da,#4a1f15)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
+.band{min-height:100vh;padding:clamp(16px,4vw,48px) max(4vw,12px);
+ background-color:var(--green);
+ background-image:radial-gradient(circle at 20px 20px,var(--gold) 0 7px,transparent 8px),
+  radial-gradient(circle at 20px 20px,transparent 0 13px,rgba(255,255,255,.18) 14px 16px,transparent 17px),
+  radial-gradient(circle at 0 0,var(--coral) 0 4px,transparent 5px);
+ background-size:40px 40px;display:grid;place-items:start center}
+.cab{width:100%;max-width:720px;background:var(--card);border-radius:28px;padding:clamp(18px,3.5vw,32px);
+ box-shadow:0 0 0 6px var(--gold),0 22px 50px rgba(0,0,0,.35);position:relative;overflow:hidden}
+h1,h2,.big{font-family:"Baloo 2",Nunito,sans-serif;line-height:1.05;margin:0;text-wrap:balance}
+h1{font-size:clamp(34px,7vw,52px);color:var(--green2)}
+h2{font-size:clamp(26px,5vw,36px)}
+.sub{color:var(--soft);margin:.4em 0 0}
+.hidden{display:none!important}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:20px;align-items:center}
+.mama{width:100%;height:auto;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.chip{font:700 15px Nunito,sans-serif;min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#fff}
+.btn{font:800 19px "Baloo 2",Nunito,sans-serif;min-height:52px;padding:10px 28px;border:0;border-radius:16px;background:var(--coral);color:#fff;cursor:pointer;box-shadow:0 5px 0 #a8371a}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #a8371a}
+.btn.alt{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.how{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:6px;color:var(--soft);font-size:15px}
+.how b{color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.score{font:800 28px "Baloo 2",sans-serif}
+.mult{font:800 15px Nunito,sans-serif;background:var(--gold);color:#1d1a12;border-radius:999px;padding:2px 10px;margin-left:6px;vertical-align:middle}
+.lives{display:flex;gap:4px}.lives svg{width:34px;height:22px}.lives .gone{opacity:.18}
+.timer{height:12px;border-radius:99px;background:var(--line);margin:12px 0 16px;overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--coral),var(--gold));border-radius:99px;transition:width .1s linear}
+.talk{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;align-items:center}
+.bubble{background:var(--bg);border:2px solid var(--line);border-radius:20px 20px 20px 4px;padding:12px 16px;font-weight:700;min-height:64px;display:flex;align-items:center}
+body:not(.audio) .say{display:none}
+.mission{margin:.7em 0 0;font-weight:800;color:var(--coral)}
+.say{font:800 15px Nunito,sans-serif;min-height:44px;padding:6px 14px;margin-top:8px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.q{text-align:center;margin:20px 0 14px;font-size:19px}
+.igbo{display:block;font:800 clamp(40px,9vw,60px)/1.1 "Baloo 2",sans-serif;color:var(--green2);margin-top:4px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{font:700 18px Nunito,sans-serif;min-height:60px;padding:10px 14px;border-radius:16px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;text-align:left;display:flex;gap:10px;align-items:center}
+.opt kbd{font:800 13px Nunito;border:1.5px solid var(--line);border-radius:6px;padding:0 6px;color:var(--soft);flex:none}
+.opt:hover:not(:disabled){border-color:var(--green2)}
+.opt.right{background:var(--ok);border-color:#2a9d6a}.opt.wrong{background:var(--bad);border-color:var(--coral)}
+.opt:disabled{cursor:default}
+.slipper{position:absolute;top:38%;left:-120px;width:110px;pointer-events:none;z-index:5;opacity:0}
+.slipper.fly{animation:fly .9s ease-in forwards}
+@keyframes fly{0%{opacity:1;transform:translate(0,0) rotate(0)}60%{opacity:1}100%{opacity:0;transform:translate(calc(720px + 240px),-60px) rotate(900deg)}}
+.cab.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.mama .m{display:none}.mama[data-mood=happy] .m-happy,.mama[data-mood=mad] .m-mad,.mama[data-mood=calm] .m-calm{display:inline}
+.mama[data-mood=mad] .brow-l{transform:rotate(18deg);transform-origin:46px 62px}
+.mama[data-mood=mad] .brow-r{transform:rotate(-18deg);transform-origin:74px 62px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}
+.stat{background:var(--bg);border-radius:16px;padding:12px;text-align:center}
+.stat b{display:block;font:800 30px "Baloo 2",sans-serif;color:var(--green2)}
+.stat span{font-size:14px;color:var(--soft)}
+.words{list-style:none;margin:8px 0 18px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.words li{background:var(--bad);border-radius:12px;padding:8px 12px}
+.words li b{font-family:"Baloo 2",sans-serif;font-size:19px;margin-right:6px}
+.words.good li{background:var(--ok)}
+.note{font-size:13px;color:var(--soft);margin:16px 0 0}
+.toast{font-size:14px;color:var(--green2);font-weight:700}
+@media(max-width:600px){.hero{grid-template-columns:minmax(0,1fr)}.hero .mama{max-width:150px;margin:0 auto;order:-1}
+ .opts,.words{grid-template-columns:minmax(0,1fr)}.talk{grid-template-columns:76px minmax(0,1fr)}.stats{gap:6px}}
+@media(prefers-reduced-motion:reduce){.slipper.fly,.cab.shake{animation:none}.timer i{transition:none}}
+</style>
+</head>
+<body>
+<div class="band">
+<div class="cab" id="cab">
+<svg class="slipper" id="slipper" viewBox="0 0 110 44" aria-hidden="true"><use href="#slip"/></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <defs>
+  <pattern id="wax" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#f2b705"/><circle cx="7" cy="7" r="4" fill="#0b6e4f"/><circle cx="7" cy="7" r="1.6" fill="#e4572e"/></pattern>
+  <pattern id="wax2" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#0b6e4f"/><path d="M0 6h12M6 0v12" stroke="#f2b705" stroke-width="2"/></pattern>
+  <g id="slip"><ellipse cx="55" cy="26" rx="52" ry="15" fill="#2b6cb0"/><ellipse cx="55" cy="23" rx="47" ry="11" fill="#63a4ec"/><path d="M30 22 Q55 2 70 22" stroke="#e4572e" stroke-width="6" fill="none" stroke-linecap="round"/></g>
+  <g id="mamaArt">
+   <path d="M14 130 Q18 98 60 96 Q102 98 106 130Z" fill="url(#wax2)"/>
+   <circle cx="60" cy="70" r="31" fill="#8a5432"/>
+   <path d="M24 52 Q20 14 60 12 Q104 12 98 50 Q110 40 112 26 Q100 30 96 20 Q84 46 60 42 Q36 44 24 52Z" fill="url(#wax)" stroke="#c48f00" stroke-width="2"/>
+   <path d="M30 50 Q60 34 92 50" stroke="#c48f00" stroke-width="3" fill="none"/>
+   <circle cx="30" cy="80" r="4" fill="#f2b705"/><circle cx="90" cy="80" r="4" fill="#f2b705"/>
+   <path class="brow-l" d="M40 62 L52 62" stroke="#2a160b" stroke-width="3.5" stroke-linecap="round"/>
+   <path class="brow-r" d="M68 62 L80 62" stroke="#2a160b" stroke-width="3.5" stroke-linecap="round"/>
+   <circle cx="46" cy="71" r="4" fill="#1a0d06"/><circle cx="74" cy="71" r="4" fill="#1a0d06"/>
+   <circle cx="47.5" cy="69.5" r="1.3" fill="#fff"/><circle cx="75.5" cy="69.5" r="1.3" fill="#fff"/>
+   <path class="m m-happy" d="M46 84 Q60 98 74 84 Q60 90 46 84Z" fill="#5b1a10" stroke="#5b1a10" stroke-width="2" stroke-linejoin="round"/>
+   <path class="m m-mad" d="M47 92 Q60 82 73 92" stroke="#5b1a10" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+   <path class="m m-calm" d="M49 87 Q60 92 71 87" stroke="#5b1a10" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  </g>
+ </defs>
+</svg>
+
+<section id="start">
+ <div class="hero">
+  <div>
+   <h1>Nne Says!</h1>
+   <p class="sub">Never learned Igbo growing up? Mama is here to fix that. She calls out a word, you have 60 seconds and 3 slippers' worth of her patience. Answer right, or the slipper comes flying.</p>
+   <p class="mission">For Nigerian-American teens and Igbo kids everywhere, so the language keeps living with us.</p>
+  </div>
+  <svg class="mama" viewBox="0 0 120 130" data-mood="happy" role="img" aria-label="Mama in a gold gele, smiling"><use href="#mamaArt"/></svg>
+ </div>
+ <div class="chips" id="chips" role="group" aria-label="Choose a topic"></div>
+ <div class="row"><button class="btn" id="go">Play</button><span class="toast" id="bestStart"></span></div>
+ <ul class="how">
+  <li><b>Right answers</b> build a streak; every 3 in a row raises your multiplier (up to x4).</li>
+  <li><b>Wrong answers</b> cost a slipper. Lose all 3 and Mama ends the lesson.</li>
+  <li><b>Keys 1–4</b> work on a keyboard.</li>
+ </ul>
+</section>
+
+<section id="play" class="hidden">
+ <div class="hud">
+  <div class="score"><span id="score">0</span><span class="mult" id="mult">x1</span></div>
+  <div class="lives" id="lives" aria-label="Slippers left"></div>
+ </div>
+ <div class="timer" aria-hidden="true"><i id="bar"></i></div>
+ <div class="talk">
+  <svg class="mama" id="mama" viewBox="0 0 120 130" data-mood="calm" aria-hidden="true"><use href="#mamaArt"/></svg>
+  <div class="bubble" id="bubble" aria-live="polite">Oya, let's see what you know.</div>
+ </div>
+ <div class="q" id="q"></div>
+ <div class="opts" id="opts"></div>
+</section>
+
+<section id="end" class="hidden">
+ <h2 id="endTitle">Lesson over!</h2>
+ <p class="sub" id="endLine"></p>
+ <div class="stats">
+  <div class="stat"><b id="eScore">0</b><span>Score</span></div>
+  <div class="stat"><b id="eBest">0</b><span>Best</span></div>
+  <div class="stat"><b id="eAcc">0%</b><span>Correct</span></div>
+ </div>
+ <div id="missWrap"><h3>Words to practise</h3><ul class="words" id="missed"></ul></div>
+ <div id="goodWrap"><h3>Words you got right</h3><ul class="words good" id="good"></ul></div>
+ <div class="row"><button class="btn" id="again">Play again</button><button class="btn alt" id="share">Copy score to share</button><button class="btn alt" id="home">Change topic</button></div>
+ <p class="toast" id="copied" aria-live="polite"></p>
+</section>
+<p class="note">Prototype vocabulary in standard Igbo, written by an AI. A native speaker needs to check spelling, tone marks and dialect before launch.</p>
+</div>
+</div>
+<script>
+{
+const WORDS=[
+ ["Ndewo","Hello","Greetings"],["Kedu","How are you?","Greetings"],["Daalụ","Thank you","Greetings"],["Biko","Please","Greetings"],["Ka ọ dị","Goodbye","Greetings"],["Ụtụtụ ọma","Good morning","Greetings"],["Ka chi fọọ","Good night","Greetings"],["Nnọọ","Welcome","Greetings"],
+ ["Nne","Mother","Family"],["Nna","Father","Family"],["Nwa","Child","Family"],["Nwanne","Sibling","Family"],["Nne nne","Grandmother","Family"],["Nna nna","Grandfather","Family"],["Di","Husband","Family"],["Nwunye","Wife","Family"],
+ ["Nri","Food","Food"],["Mmiri","Water","Food"],["Ji","Yam","Food"],["Ofe","Soup","Food"],["Ọka","Corn","Food"],["Azụ","Fish","Food"],["Ose","Pepper","Food"],["Akpụ","Cassava","Food"],
+ ["Isi","Head","Body"],["Anya","Eye","Body"],["Ntị","Ear","Body"],["Ọnụ","Mouth","Body"],["Aka","Hand","Body"],["Ụkwụ","Leg / foot","Body"],["Imi","Nose","Body"],
+ ["Otu","One","Numbers"],["Abụọ","Two","Numbers"],["Atọ","Three","Numbers"],["Anọ","Four","Numbers"],["Ise","Five","Numbers"],["Isii","Six","Numbers"],["Asaa","Seven","Numbers"],["Asatọ","Eight","Numbers"],["Itoolu","Nine","Numbers"],["Iri","Ten","Numbers"],
+ ["Nkịta","Dog","Animals"],["Ọkụkọ","Chicken","Animals"],["Ewu","Goat","Animals"],["Ehi","Cow","Animals"],["Nnụnụ","Bird","Animals"],["Agwọ","Snake","Animals"],["Enwe","Monkey","Animals"],["Pusi","Cat","Animals"],
+ ["Ụlọ","House","Around us"],["Ego","Money","Around us"],["Akwụkwọ","Book","Around us"],["Ụgbọala","Car","Around us"],["Osisi","Tree","Around us"],["Anwụ","Sun","Around us"],["Ọnwa","Moon","Around us"],["Kpakpando","Star","Around us"]
+].map(([i,e,c])=>({i,e,c}));
+const CATS=["Everything",...new Set(WORDS.map(w=>w.c))];
+const PRAISE=["Ezigbo nwa! That's my child.","Jisie ike! Grandma is dancing in the village.","Ehen! Now you're talking.","See brain! I'm calling your uncle to brag.","Correct! You'll get extra meat in your soup tonight.","Chineke! Who taught you? Oh yes, me."];
+const STREAK=["Three in a row! Are you sure you were born abroad?","Look at you! I'll tell the whole WhatsApp group.","Ah-ah! Is it Igbo you're dreaming in now?"];
+const SCOLD=["Ehn?! After all the school fees?","Who taught you this? Not me o.","Is it English you'll speak in the village?","Your grandmother just called. She's disappointed.","The slipper is warming up, my friend.","Ah! You want to disgrace me in front of Aunty?"];
+const slug=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+let clip=null;
+function play(path){try{if(clip)clip.pause();clip=new Audio(path);const p=clip.play();if(p)p.catch(()=>{})}catch(e){}}
+const sayWord=w=>play(`audio/words/${slug(w.i)}.mp3`);
+const sayLine=(kind,arr,line)=>play(`audio/mama/${kind}-${arr.indexOf(line)+1}.mp3`);
+const ROUND=60,$=id=>document.getElementById(id),pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a};
+let cat="Everything",S=null,timer=null,lock=false,last=null;
+const getBest=()=>{try{return +localStorage.getItem("nneBest")||0}catch(e){return 0}};
+const setBest=v=>{try{localStorage.setItem("nneBest",v)}catch(e){}};
+const show=id=>["start","play","end"].forEach(s=>$(s).classList.toggle("hidden",s!==id));
+function drawChips(){$("chips").innerHTML=CATS.map(c=>`<button class="chip" aria-pressed="${c===cat}" data-c="${c}">${c}</button>`).join("");
+ const b=getBest();$("bestStart").textContent=b?`Your best: ${b}`:""}
+function drawLives(){$("lives").innerHTML=[0,1,2].map(n=>`<svg viewBox="0 0 110 44" class="${n<S.lives?"":"gone"}"><use href="#slip"/></svg>`).join("")}
+function mult(){return Math.min(1+Math.floor(S.streak/3),4)}
+function hud(){$("score").textContent=S.score;$("mult").textContent="x"+mult();drawLives()}
+function start(){S={score:0,streak:0,lives:3,t0:performance.now(),seen:0,right:0,missed:new Map(),good:new Map()};
+ show("play");$("mama").dataset.mood="calm";$("bubble").textContent="Oya, let's see what you know.";hud();next();
+ clearInterval(timer);timer=setInterval(()=>{const left=ROUND-(performance.now()-S.t0)/1000;$("bar").style.width=Math.max(0,left/ROUND*100)+"%";if(left<=0)finish("time")},100)}
+function next(){lock=false;const pool=cat==="Everything"?WORDS:WORDS.filter(w=>w.c===cat);
+ let w;do{w=pick(pool)}while(w===last&&pool.length>1);last=w;
+ const dir=Math.random()<.65?"ie":"ei";
+ const opts=shuffle([w,...shuffle(WORDS.filter(x=>x.c===w.c&&x!==w)).slice(0,3)]);
+ S.cur={w,dir,opts};
+ $("q").innerHTML=dir==="ie"?`What does this mean?<span class="igbo">${w.i}</span><button class="say" id="say">Hear it</button>`:`How do you say <b>“${w.e}”</b> in Igbo?`;
+ if(dir==="ie"){$("say").onclick=()=>sayWord(w);sayWord(w)}
+ $("opts").innerHTML=opts.map((o,k)=>`<button class="opt" data-k="${k}"><kbd>${k+1}</kbd><span>${dir==="ie"?o.e:o.i}</span></button>`).join("")}
+function answer(k){if(lock||!S)return;lock=true;const {w,opts}=S.cur,btns=[...$("opts").children],ok=opts[k]===w;S.seen++;
+ btns.forEach((b,n)=>{b.disabled=true;if(opts[n]===w)b.classList.add("right")});
+ if(ok){S.right++;S.streak++;S.score+=10*mult();S.good.set(w.i,w);
+  const st=S.streak%3===0,ln=st?pick(STREAK):pick(PRAISE);$("mama").dataset.mood="happy";$("bubble").textContent=ln;if(S.cur.dir==="ei")sayWord(w);else sayLine(st?"streak":"praise",st?STREAK:PRAISE,ln);hud();setTimeout(next,st?1600:900)}
+ else{btns[k].classList.add("wrong");S.streak=0;S.lives--;S.missed.set(w.i,w);
+  const sc=pick(SCOLD);$("mama").dataset.mood="mad";$("bubble").textContent=`${sc} ${w.i} means “${w.e}”.`;sayLine("scold",SCOLD,sc);setTimeout(()=>sayWord(w),1300);hud();throwSlipper();
+  setTimeout(()=>S.lives<=0?finish("lives"):next(),2400)}}
+function throwSlipper(){const s=$("slipper"),c=$("cab");s.classList.remove("fly");c.classList.remove("shake");void s.offsetWidth;s.classList.add("fly");c.classList.add("shake")}
+function finish(why){if(!S||$("play").classList.contains("hidden"))return;clearInterval(timer);
+ const best=Math.max(getBest(),S.score);setBest(best);
+ $("eScore").textContent=S.score;$("eBest").textContent=best;$("eAcc").textContent=S.seen?Math.round(S.right/S.seen*100)+"%":"0%";
+ $("endTitle").textContent=why==="lives"?"Mama has run out of slippers!":"Time up!";
+ $("endLine").textContent=S.score>=150?"Your ancestors are proud. Go and greet your grandma in Igbo.":S.score>=60?"Not bad! A little more practice and you'll survive the village.":"We'll practise again tomorrow. And the day after.";
+ const li=m=>[...m.values()].map(w=>`<li><b>${w.i}</b>${w.e} <button class="say" data-w="${w.i}">Hear it</button></li>`).join("");
+ [...S.good.keys()].forEach(k=>S.missed.has(k)&&S.good.delete(k));
+ $("missed").innerHTML=li(S.missed);$("good").innerHTML=li(S.good);
+ $("missWrap").classList.toggle("hidden",!S.missed.size);$("goodWrap").classList.toggle("hidden",!S.good.size);
+ $("copied").textContent="";show("end")}
+$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;cat=b.dataset.c;drawChips()});
+$("end").addEventListener("click",e=>{const b=e.target.closest(".say");if(b)sayWord({i:b.dataset.w})});
+$("go").addEventListener("click",start);$("again").addEventListener("click",start);
+$("home").addEventListener("click",()=>{drawChips();show("start")});
+$("opts").addEventListener("click",e=>{const b=e.target.closest(".opt");if(b)answer(+b.dataset.k)});
+document.addEventListener("keydown",e=>{if(!$("play").classList.contains("hidden")&&/^[1-4]$/.test(e.key))answer(+e.key-1)});
+$("share").addEventListener("click",()=>{const t=`I scored ${S.score} on Nne Says!, the Igbo slipper game. Can you beat me? #LearnIgbo`;
+ const done=m=>$("copied").textContent=m;
+ try{navigator.clipboard.writeText(t).then(()=>done("Copied! Paste it into your story or group chat."),()=>done(t))}catch(e){done(t)}});
+drawChips();
+try{const t=new Audio();t.addEventListener("canplaythrough",()=>document.body.classList.add("audio"),{once:true});t.src="audio/words/mmiri.mp3";t.load()}catch(e){}
+}
+</script>
+</body>
+</html>
