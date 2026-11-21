@@ -166,7 +166,7 @@ body:not(.audio) .say{display:none}
 
 <section id="play" class="hidden">
  <div class="hud">
-  <div class="score"><span id="score">0</span><span class="mult" id="mult">x1</span></div>
+  <div class="row"><button class="btn alt" id="quitPlay">Home</button><div class="score"><span id="score">0</span><span class="mult" id="mult">x1</span></div></div>
   <div class="lives" id="lives" aria-label="Slippers left"></div>
  </div>
  <div class="timer" aria-hidden="true"><i id="bar"></i></div>
@@ -352,7 +352,12 @@ $("openBook").addEventListener("click",()=>{$("find").value="";drawBook();show("
 $("closeBook").addEventListener("click",()=>show("start"));
 $("find").addEventListener("input",drawBook);
 $("bookList").addEventListener("click",e=>{const b=e.target.closest(".say");if(b)sayWord({i:b.dataset.w})});
-$("go").addEventListener("click",start);$("again").addEventListener("click",start);
+$("go").addEventListener("click",start);
+/* Leave Quick play mid-round: stop the clock, Mama's voice and any ad break, then go home. */
+$("quitPlay").addEventListener("click",()=>{clearInterval(timer);S=null;lock=false;
+ if(clip){if(clip._fin)clip._fin();clip.pause()}
+ if(!$("adModal").classList.contains("hidden")){closeAd();adYes=adNo=null}
+ drawChips();show("start")});$("again").addEventListener("click",start);
 $("home").addEventListener("click",()=>{drawChips();show("start")});
 $("opts").addEventListener("click",e=>{const b=e.target.closest(".opt");if(b)answer(+b.dataset.k)});
 document.addEventListener("keydown",e=>{if(!$("play").classList.contains("hidden")&&/^[1-4]$/.test(e.key))answer(+e.key-1)});
