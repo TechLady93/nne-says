@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nne Says! Igbo</title>
+<title>Nne Says! Learn Igbo with Mama</title>
+<meta name="description" content="A fun, funny Igbo language game. Mama calls out a word, you answer before the timer runs out, or the slipper comes flying.">
+<meta name="theme-color" content="#0b6e4f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b6e4f'/%3E%3Cpath d='M10 30 Q8 8 32 7 Q58 7 54 28 Q46 22 32 22 Q18 22 10 30Z' fill='%23f2b705'/%3E%3Ccircle cx='32' cy='38' r='17' fill='%238a5432'/%3E%3Cpath d='M10 30 Q8 8 32 7 Q58 7 54 28 Q46 22 32 22 Q18 22 10 30Z' fill='%23f2b705'/%3E%3Ccircle cx='25' cy='37' r='2.4' fill='%231a0d06'/%3E%3Ccircle cx='39' cy='37' r='2.4' fill='%231a0d06'/%3E%3Cpath d='M25 45 Q32 51 39 45Z' fill='%237a1f12'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
@@ -105,6 +108,10 @@ body:not(.audio) .say{display:none}
 .words.good li{background:var(--ok)}
 .note{font-size:13px;color:var(--soft);margin:16px 0 0}
 .toast{font-size:14px;color:var(--green2);font-weight:700}
+.foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:16px}.foot .note{margin:0;flex:1 1 260px}
+.foot .say{margin:0}
+.line.now{outline:3px solid var(--gold);outline-offset:2px}
+.linkbtn{font:700 14px Nunito,sans-serif;background:none;border:0;padding:8px 0;color:var(--soft);text-decoration:underline;cursor:pointer;min-height:44px}
 @media(max-width:600px){.hero{grid-template-columns:minmax(0,1fr)}.hero .mama{max-width:150px;margin:0 auto;order:-1}
  .opts,.words{grid-template-columns:minmax(0,1fr)}.talk{grid-template-columns:76px minmax(0,1fr)}.stats{gap:6px}}
 @media(prefers-reduced-motion:reduce){.slipper.fly,.cab.shake{animation:none}.timer i{transition:none}}
@@ -129,9 +136,12 @@ body:not(.audio) .say{display:none}
    <path class="brow-r" d="M68 62 L80 62" stroke="#2a160b" stroke-width="3.5" stroke-linecap="round"/>
    <circle cx="46" cy="71" r="4" fill="#1a0d06"/><circle cx="74" cy="71" r="4" fill="#1a0d06"/>
    <circle cx="47.5" cy="69.5" r="1.3" fill="#fff"/><circle cx="75.5" cy="69.5" r="1.3" fill="#fff"/>
-   <path class="m m-happy" d="M46 84 Q60 98 74 84 Q60 90 46 84Z" fill="#5b1a10" stroke="#5b1a10" stroke-width="2" stroke-linejoin="round"/>
-   <path class="m m-mad" d="M47 92 Q60 82 73 92" stroke="#5b1a10" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-   <path class="m m-calm" d="M49 87 Q60 92 71 87" stroke="#5b1a10" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+   <path d="M41 68 L38.5 66 M79 68 L81.5 66" stroke="#1a0d06" stroke-width="1.8" stroke-linecap="round"/>
+   <circle cx="40" cy="81" r="5" fill="#e4572e" opacity=".28"/><circle cx="80" cy="81" r="5" fill="#e4572e" opacity=".28"/>
+   <path d="M56.5 80 Q60 82.5 63.5 80" stroke="#5e3420" stroke-width="2" fill="none" stroke-linecap="round"/>
+   <g class="m m-happy"><path d="M49 86 Q60 99 71 86 Z" fill="#7a1f12"/><path d="M50.5 86.5 L69.5 86.5 Q69 89 67 89.6 L53 89.6 Q51 89 50.5 86.5Z" fill="#fff"/></g>
+   <path class="m m-mad" d="M50 92 Q60 85 70 92" stroke="#7a1f12" stroke-width="3" fill="none" stroke-linecap="round"/>
+   <path class="m m-calm" d="M51 87 Q60 92.5 69 87" stroke="#7a1f12" stroke-width="3" fill="none" stroke-linecap="round"/>
   </g>
  </defs>
 </svg>
@@ -173,6 +183,7 @@ body:not(.audio) .say{display:none}
  <p class="sub">Ten short units, from “Ndewo” to your first real conversation. Finish one to unlock the next.</p>
  <div class="meter" aria-hidden="true"><i id="pathBar"></i></div><p class="sub" id="pathCount"></p>
  <ol class="units" id="units"></ol>
+ <button class="linkbtn" id="preview">Showing someone the game? Open all units</button>
 </section>
 
 <section id="lesson" class="hidden">
@@ -200,7 +211,7 @@ body:not(.audio) .say{display:none}
  </div>
  <div id="missWrap"><h3>Words to practise</h3><ul class="words" id="missed"></ul></div>
  <div id="goodWrap"><h3>Words you got right</h3><ul class="words good" id="good"></ul></div>
- <div class="row"><button class="btn" id="again">Play again</button><button class="btn alt" id="share">Copy score to share</button><button class="btn alt" id="home">Change topic</button></div>
+ <div class="row"><button class="btn" id="again">Play again</button><button class="btn alt" id="share">Copy score to share</button><button class="btn alt" id="home">Home</button></div>
  <p class="toast" id="copied" aria-live="polite"></p>
 </section>
 <div class="modal hidden" id="adModal" role="dialog" aria-modal="true" aria-labelledby="adTitle"><div class="sheet">
@@ -210,7 +221,7 @@ body:not(.audio) .say{display:none}
  <p class="prem"><b>Nne Says! Premium</b> (coming soon): unlimited slippers, no ads, every unit.</p>
  <p class="prem">This is a sample ad break. The app will show a real ad here.</p>
 </div></div>
-<p class="note">Prototype vocabulary in standard Igbo, written by an AI. A native speaker needs to check spelling, tone marks and dialect before launch.</p>
+<div class="foot"><button class="say" id="snd" aria-pressed="true">Sound: On</button><p class="note">Early prototype. The Igbo here is a draft in standard Igbo and is waiting for a native speaker to check spelling, tone marks and dialect.</p></div>
 </div>
 </div>
 <script>
@@ -278,7 +289,8 @@ const SCOLD=["Ehn?! After all the school fees?","Who taught you this? Not me o."
 const slug=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 let clip=null;
 /* play() resolves when the clip ends, fails, or is cut off by another clip, so the game can wait for Mama to finish. */
-function play(path){return new Promise(res=>{try{if(clip&&clip._fin)clip._fin();if(clip)clip.pause();
+let muted=false;try{muted=localStorage.getItem("nneMute")==="1"}catch(e){}
+function play(path){return new Promise(res=>{if(muted)return res();try{if(clip&&clip._fin)clip._fin();if(clip)clip.pause();
  const a=new Audio(path);clip=a;let done=false;const fin=()=>{if(!done){done=true;a._fin=null;res()}};a._fin=fin;
  a.onended=fin;a.onerror=fin;const p=a.play();if(p)p.catch(fin);setTimeout(fin,9000)}catch(e){res()}})}
 const wordPath=t=>`audio/words/${slug(t)}.mp3`,linePath=(kind,arr,line)=>`audio/mama/${kind}-${arr.indexOf(line)+1}.mp3`;
@@ -360,8 +372,9 @@ const getProg=()=>{try{return JSON.parse(localStorage.getItem("nneProg")||"[]")}
 const setProg=p=>{try{localStorage.setItem("nneProg",JSON.stringify(p))}catch(e){}};
 const FREE_UNITS=6;
 let L=null;
-function drawPath(){const done=getProg();
- $("units").innerHTML=UNITS.map((u,k)=>{const ok=done.includes(u.id),open=ok||k===0||done.includes(UNITS[k-1].id);
+let preview=false;
+function drawPath(){const done=getProg();$("preview").textContent=preview?"Back to normal (finish one to unlock the next)":"Showing someone the game? Open all units";
+ $("units").innerHTML=UNITS.map((u,k)=>{const ok=done.includes(u.id),open=preview||ok||k===0||done.includes(UNITS[k-1].id);
   return `<li><button class="unit${ok?" done":""}" data-k="${k}"${open?"":" disabled"}><span class="num">${ok?"✓":k+1}</span><span class="ut"><b>${u.t}</b><small>${u.g}</small></span>${k>=FREE_UNITS?'<span class="tag">Premium</span>':""}</button></li>`}).join("");
  const n=UNITS.filter(u=>done.includes(u.id)).length;$("pathBar").style.width=n/UNITS.length*100+"%";$("pathCount").textContent=`${n} of ${UNITS.length} units complete`}
 const say1=t=>sayWord({i:t});
@@ -406,7 +419,10 @@ function checkBuild(){if(L.lock)return;L.lock=true;const [s]=L.u.build[L.b];
  else{const sc=pick(SCOLD);lb(`${sc} It's “${s}”.`,"mad");loseLife(renderBuild,speak([linePath("scold",SCOLD,sc),wordPath(s)],2000))}}
 function renderTalk(){$("stepName").textContent="Talk";lBar(.95);
  $("lBody").innerHTML=`<div class="convo">${L.u.talk.map(([who,i,e])=>`<div class="line ${who==="A"?"a":"b"}"><b>${i}</b><span>${e}</span><button class="say" data-w="${esc(i)}">Hear it</button></div>`).join("")}</div>
- <div class="row nav"><button class="btn" data-act="finish">Finish unit</button></div>`}
+ <div class="row nav"><button class="btn alt" data-act="playall">Play conversation</button><button class="btn" data-act="finish">Finish unit</button></div>`}
+function playTalk(){const me=L,lines=[...document.querySelectorAll("#lBody .line")];
+ L.u.talk.reduce((p,[,i],n)=>p.then(()=>{if(L!==me||L.step!=="talk")return;lines.forEach(x=>x.classList.remove("now"));lines[n].classList.add("now");lines[n].scrollIntoView({block:"nearest",behavior:"smooth"});return Promise.all([say1(i),wait(muted?1400:0)]).then(()=>wait(350))}),Promise.resolve())
+  .then(()=>lines.forEach(x=>x.classList.remove("now")))}
 function renderDone(){const p=getProg();if(!p.includes(L.u.id)){p.push(L.u.id);setProg(p)}lBar(1);lLives();
  const nxt=UNITS[L.k+1];$("stepName").textContent="Unit complete";lb(pick(STREAK),"happy");
  $("lBody").innerHTML=`<div class="card"><span class="igbo">Jisie ike!</span><p class="en">You finished <b>${L.u.t}</b>: ${L.u.items.length} new words and phrases.</p></div>
@@ -420,14 +436,21 @@ $("lBody").addEventListener("click",e=>{const b=e.target.closest("button");if(!b
  else if(a==="unpick"&&!L.lock){L.picked=L.picked.filter(p=>p.id!==+b.dataset.id);drawBuild()}
  else if(a==="check")checkBuild();
  else if(a==="finish")nextStep();
+ else if(a==="playall")playTalk();
  else if(a==="nextunit")startUnit(L.k+1);
  else if(a==="path"){drawPath();show("path")}});
 $("units").addEventListener("click",e=>{const b=e.target.closest(".unit");if(b&&!b.disabled)startUnit(+b.dataset.k)});
 $("openPath").addEventListener("click",()=>{drawPath();show("path")});
+$("preview").addEventListener("click",()=>{preview=!preview;drawPath()});
 $("closePath").addEventListener("click",()=>show("start"));
 $("quitLesson").addEventListener("click",()=>{drawPath();show("path")});
 document.addEventListener("keydown",e=>{if(L&&!$("lesson").classList.contains("hidden")&&L.step==="practice"&&/^[1-4]$/.test(e.key))pickOpt(+e.key-1)});
 
+/* Copy Mama's drawing into each portrait so her moods (mouth, brows) can be switched with CSS. */
+document.querySelectorAll("svg.mama").forEach(s=>s.innerHTML=$("mamaArt").innerHTML);
+function drawSnd(){$("snd").textContent=muted?"Sound: Off":"Sound: On";$("snd").setAttribute("aria-pressed",String(!muted))}
+$("snd").addEventListener("click",()=>{muted=!muted;try{localStorage.setItem("nneMute",muted?"1":"0")}catch(e){}if(muted&&clip){clip.pause();if(clip._fin)clip._fin()}drawSnd()});
+drawSnd();
 drawChips();
 try{const t=new Audio();t.addEventListener("canplaythrough",()=>document.body.classList.add("audio"),{once:true});t.src="audio/words/mmiri.mp3";t.load()}catch(e){}
 }
