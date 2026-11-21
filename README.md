@@ -28,7 +28,7 @@ Open `index.html` in a browser. It runs on phones too, with no install.
 - [x] Slipper lives with rewarded-ad revive
 - [ ] Native-speaker review of all vocabulary and tone marks
 - [x] Voice every word and Mama line (ElevenLabs, 129 clips)
-- [ ] Voice the lesson sentences and conversation lines
+- [x] Voice the lesson sentences and conversation lines (18 clips)
 - [ ] Playtest with 20 to 30 people
 - [x] Traveler mode: market, transport, greetings and directions phrases
 - [ ] Wrap for iOS and Android (Capacitor)
