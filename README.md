@@ -17,7 +17,7 @@ Nne Says! is a way to reconnect with Igbo roots. It is for first-generation Nige
 - **Lessons:** 10 units, from "Ndewo" (hello) to a first real conversation. Each unit has four steps: Learn (flashcards with audio), Practice (multiple choice), Build (put the words of a sentence in order) and Talk (a short dialogue Mama reads aloud).
 - **Quick play:** a 60-second round with 3 slipper "lives," streaks and score multipliers up to x4.
 - **Traveler mode and Phrasebook:** market, taxi, directions and emergency phrases, searchable in English or Igbo.
-- **Mama's voice:** 144 Igbo words and lines plus 15 reactions, voiced in a warm Nigerian-mother voice. She praises, teases and scolds, and the game waits for her to finish talking.
+- **Mama's voice:** 144 Igbo words and lines, 15 reactions and 116 spoken corrections, voiced in a warm Nigerian-mother voice. She praises, teases and scolds, and the game waits for her to finish talking.
 - **Mama reacts:** her face changes (happy, calm, cross) with every answer, and a slipper flies across the screen when you miss.
 - **Progress saved** on the device, best score, and a "copy score to share" button.
 - **Slipper revive:** a sample rewarded-ad break, showing how the free version will make money.
@@ -46,6 +46,8 @@ No install, accounts or API keys needed.
 | `index.html` | The game: Lessons, Quick play, Phrasebook |
 | `audio/words/` | One MP3 per Igbo word or sentence (e.g. `mmiri.mp3`) |
 | `audio/mama/` | Mama's reactions (`praise-1.mp3`, `scold-3.mp3`, ...) |
+| `audio/means/` | Mama's corrections: "It means: ..." for every English meaning |
+| `meaning-script.csv` | The 116 correction lines and their file names |
 | `voice-script.csv` | Every word and Mama line to voice, with its file name |
 | `APP-STORE-PLAN.md` | Plan for the iOS/Android app and how it makes money |
 

@@ -295,7 +295,7 @@ let muted=false;try{muted=localStorage.getItem("nneMute")==="1"}catch(e){}
 function play(path){return new Promise(res=>{if(muted)return res();try{if(clip&&clip._fin)clip._fin();if(clip)clip.pause();
  const a=new Audio(path);clip=a;let done=false;const fin=()=>{if(!done){done=true;a._fin=null;res()}};a._fin=fin;
  a.onended=fin;a.onerror=fin;const p=a.play();if(p)p.catch(fin);setTimeout(fin,9000)}catch(e){res()}})}
-const wordPath=t=>`audio/words/${slug(t)}.mp3`,linePath=(kind,arr,line)=>`audio/mama/${kind}-${arr.indexOf(line)+1}.mp3`;
+const meansPath=e=>`audio/means/${slug(e)}.mp3`,wordPath=t=>`audio/words/${slug(t)}.mp3`,linePath=(kind,arr,line)=>`audio/mama/${kind}-${arr.indexOf(line)+1}.mp3`;
 const sayWord=w=>play(wordPath(w.i));
 const sayLine=(kind,arr,line)=>play(linePath(kind,arr,line));
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -331,7 +331,7 @@ function answer(k){if(lock||!S)return;lock=true;const me=S,live=()=>S===me&&!$("
   speak(S.cur.dir==="ei"?[wordPath(w.i)]:[linePath(st?"streak":"praise",st?STREAK:PRAISE,ln)],st?1600:900).then(()=>{if(live()){resume();next()}})}
  else{btns[k].classList.add("wrong");S.streak=0;S.lives--;S.missed.set(w.i,w);
   const sc=nextScold();$("mama").dataset.mood="mad";$("bubble").textContent=`${sc} ${w.i} means “${w.e}”.`;hud();throwSlipper();
-  speak([linePath("scold",SCOLD,sc),wordPath(w.i)],2400).then(()=>{if(!live())return;resume();if(S.lives>0)return next();if(S.revived)return finish("lives");S.pauseAt=performance.now();offerSlipper(()=>{S.t0+=performance.now()-S.pauseAt;S.pauseAt=0;S.revived=true;S.lives=1;hud();$("bubble").textContent="One more slipper. Don't waste it.";next()},()=>{S.pauseAt=0;finish("lives")})})}}
+  speak([linePath("scold",SCOLD,sc),wordPath(w.i),meansPath(w.e)],2400).then(()=>{if(!live())return;resume();if(S.lives>0)return next();if(S.revived)return finish("lives");S.pauseAt=performance.now();offerSlipper(()=>{S.t0+=performance.now()-S.pauseAt;S.pauseAt=0;S.revived=true;S.lives=1;hud();$("bubble").textContent="One more slipper. Don't waste it.";next()},()=>{S.pauseAt=0;finish("lives")})})}}
 function throwSlipper(){const s=$("slipper"),c=$("cab");s.classList.remove("fly");c.classList.remove("shake");void s.offsetWidth;s.classList.add("fly");c.classList.add("shake")}
 function finish(why){if(!S||$("play").classList.contains("hidden"))return;clearInterval(timer);
  const best=Math.max(getBest(),S.score);setBest(best);
@@ -412,18 +412,18 @@ function pickOpt(n){if(L.lock)return;L.lock=true;const {k,opts}=L.cur,w=L.u.item
  btns.forEach((b,j)=>{b.disabled=true;if(opts[j]===k)b.classList.add("right")});
  const me=L,live=()=>L===me&&!$("lesson").classList.contains("hidden");
  if(opts[n]===k){L.queue.shift();const ln=nextPraise();lb(ln,"happy");speak([linePath("praise",PRAISE,ln)]).then(()=>{if(live())L.queue.length?renderPractice():nextStep()})}
- else{btns[n].classList.add("wrong");L.queue.push(L.queue.shift());const sc=nextScold();lb(`${sc} ${w[0]} means “${w[1]}”.`,"mad");loseLife(renderPractice,speak([linePath("scold",SCOLD,sc),wordPath(w[0])],2000))}}
+ else{btns[n].classList.add("wrong");L.queue.push(L.queue.shift());const sc=nextScold();lb(`${sc} ${w[0]} means “${w[1]}”.`,"mad");loseLife(renderPractice,speak([linePath("scold",SCOLD,sc),wordPath(w[0]),meansPath(w[1])],2000))}}
 function renderBuild(){const [s,e]=L.u.build[L.b];L.words=s.split(" ");L.pool=shuffle(L.words.map((t,id)=>({t,id})));L.picked=[];L.lock=false;
  $("stepName").textContent=`Build · ${L.b+1} of ${L.u.build.length}`;lBar(2/3+L.b/L.u.build.length/3);drawBuild(e)}
 function drawBuild(e){e=e||L.u.build[L.b][1];
  $("lBody").innerHTML=`<p class="q">Build: <b>“${e}”</b></p><div class="answer" aria-label="Your sentence">${L.picked.map(p=>`<button class="tile" data-act="unpick" data-id="${p.id}">${p.t}</button>`).join("")||'<span class="hint">Tap the words below</span>'}</div>
  <div class="pool">${L.pool.filter(p=>!L.picked.includes(p)).map(p=>`<button class="tile" data-act="pick" data-id="${p.id}">${p.t}</button>`).join("")}</div>
  <div class="row nav"><button class="btn" data-act="check"${L.picked.length===L.words.length?"":" disabled"}>Check</button></div>`}
-function checkBuild(){if(L.lock)return;L.lock=true;const [s]=L.u.build[L.b];
+function checkBuild(){if(L.lock)return;L.lock=true;const [s,be]=L.u.build[L.b];
  const me=L,live=()=>L===me&&!$("lesson").classList.contains("hidden");
  if(L.picked.map(p=>p.t).join(" ")===s){const ln=nextPraise();lb(ln,"happy");
   speak([linePath("praise",PRAISE,ln),wordPath(s)],1300).then(()=>{if(live()){L.b++;L.b<L.u.build.length?renderBuild():nextStep()}})}
- else{const sc=nextScold();lb(`${sc} It's “${s}”.`,"mad");loseLife(renderBuild,speak([linePath("scold",SCOLD,sc),wordPath(s)],2000))}}
+ else{const sc=nextScold();lb(`${sc} It's “${s}”. It means “${be}”.`,"mad");loseLife(renderBuild,speak([linePath("scold",SCOLD,sc),wordPath(s),meansPath(be)],2000))}}
 function renderTalk(){$("stepName").textContent="Talk";lBar(.95);
  $("lBody").innerHTML=`<div class="convo">${L.u.talk.map(([who,i,e])=>`<div class="line ${who==="A"?"a":"b"}"><b>${i}</b><span>${e}</span><button class="say" data-w="${esc(i)}">Hear it</button></div>`).join("")}</div>
  <div class="row nav"><button class="btn alt" data-act="playall">Play conversation</button><button class="btn" data-act="finish">Finish unit</button></div>`}
