@@ -285,7 +285,9 @@ const CATS=["Everything","Traveler mode","Greetings","Family","Food","Body","Num
 const inCat=(w,c)=>c==="Everything"||(c==="Traveler mode"?TRAVEL.includes(w.c):w.c===c);
 const PRAISE=["Ezigbo nwa! That's my child.","Jisie ike! Grandma is dancing in the village.","Ehen! Now you're talking.","See brain! I'm calling your uncle to brag.","Correct! You'll get extra meat in your soup tonight.","Chineke! Who taught you? Oh yes, me."];
 const STREAK=["Three in a row! Are you sure you were born abroad?","Look at you! I'll tell the whole WhatsApp group.","Ah-ah! Is it Igbo you're dreaming in now?"];
-const SCOLD=["Ehn?! After all the school fees?","Who taught you this? Not me o.","Is it English you'll speak in the village?","Your grandmother just called. She's disappointed.","The slipper is warming up, my friend.","Ah! You want to disgrace me in front of Aunty?"];
+const SCOLD=["Ehn?! After all the school fees?", "Who taught you this? Not me o.", "Is it English you'll speak in the village?", "Your grandmother just called. She's disappointed.", "The slipper is warming up, my friend.", "Ah! You want to disgrace me in front of Aunty?", "Ewo! My blood pressure!", "Is this what I sent you to school for?", "Chai! Even the goat knows this one.", "I didn't carry you for nine months for this.", "Your cousin in Enugu knew this at age three.", "Ehn ehn. Come and sit down.", "Did you leave your brain at the airport?", "I'm adding you to my prayer points.", "Wait until your father hears about this.", "No jollof for you this Sunday.", "Ahn ahn! Are you a tourist now?", "Even Google Translate is laughing at you.", "I'm removing you from the family WhatsApp.", "Look at my face. Do I look happy?", "All those Christmas trips to the village, for nothing?", "Mtchew. Try again.", "My friend's children are speaking Igbo like professors.", "Chineke! Somebody hold my wrapper.", "Ehn? Say that again and see what happens.", "Your ancestors are shaking their heads.", "You want people to say I didn't train you?", "The slipper has entered the chat.", "Close TikTok and focus, biko.", "Na wa o. Na wa for you.", "Now even your English is shaking.", "I'm calling Aunty Ngozi right now.", "You think this is a joke? I'm counting.", "Somebody bring my glasses. I didn't see that.", "Let me pray for you first.", "Ehen? So you've been pretending to listen?"];
+/* Shuffle bag: every line plays once before any repeats, and never the same line twice in a row. */
+const bag=a=>{let q=[],last;return()=>{if(!q.length){q=[...a].sort(()=>Math.random()-.5);if(q[0]===last&&q.length>1)q.push(q.shift())}return last=q.shift()}},nextScold=bag(SCOLD),nextPraise=bag(PRAISE);
 const slug=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 let clip=null;
 /* play() resolves when the clip ends, fails, or is cut off by another clip, so the game can wait for Mama to finish. */
@@ -325,10 +327,10 @@ function resume(){if(S&&S.pauseAt){S.t0+=performance.now()-S.pauseAt;S.pauseAt=0
 function answer(k){if(lock||!S)return;lock=true;const me=S,live=()=>S===me&&!$("play").classList.contains("hidden");S.pauseAt=performance.now();const {w,opts}=S.cur,btns=[...$("opts").children],ok=opts[k]===w;S.seen++;
  btns.forEach((b,n)=>{b.disabled=true;if(opts[n]===w)b.classList.add("right")});
  if(ok){S.right++;S.streak++;S.score+=10*mult();S.good.set(w.i,w);
-  const st=S.streak%3===0,ln=st?pick(STREAK):pick(PRAISE);$("mama").dataset.mood="happy";$("bubble").textContent=ln;hud();
+  const st=S.streak%3===0,ln=st?pick(STREAK):nextPraise();$("mama").dataset.mood="happy";$("bubble").textContent=ln;hud();
   speak(S.cur.dir==="ei"?[wordPath(w.i)]:[linePath(st?"streak":"praise",st?STREAK:PRAISE,ln)],st?1600:900).then(()=>{if(live()){resume();next()}})}
  else{btns[k].classList.add("wrong");S.streak=0;S.lives--;S.missed.set(w.i,w);
-  const sc=pick(SCOLD);$("mama").dataset.mood="mad";$("bubble").textContent=`${sc} ${w.i} means “${w.e}”.`;hud();throwSlipper();
+  const sc=nextScold();$("mama").dataset.mood="mad";$("bubble").textContent=`${sc} ${w.i} means “${w.e}”.`;hud();throwSlipper();
   speak([linePath("scold",SCOLD,sc),wordPath(w.i)],2400).then(()=>{if(!live())return;resume();if(S.lives>0)return next();if(S.revived)return finish("lives");S.pauseAt=performance.now();offerSlipper(()=>{S.t0+=performance.now()-S.pauseAt;S.pauseAt=0;S.revived=true;S.lives=1;hud();$("bubble").textContent="One more slipper. Don't waste it.";next()},()=>{S.pauseAt=0;finish("lives")})})}}
 function throwSlipper(){const s=$("slipper"),c=$("cab");s.classList.remove("fly");c.classList.remove("shake");void s.offsetWidth;s.classList.add("fly");c.classList.add("shake")}
 function finish(why){if(!S||$("play").classList.contains("hidden"))return;clearInterval(timer);
@@ -409,8 +411,8 @@ function retryUnit(){lb("We start this practice again. Mama is patient… small 
 function pickOpt(n){if(L.lock)return;L.lock=true;const {k,opts}=L.cur,w=L.u.items[k],btns=[...document.querySelectorAll("#lBody .opt")];
  btns.forEach((b,j)=>{b.disabled=true;if(opts[j]===k)b.classList.add("right")});
  const me=L,live=()=>L===me&&!$("lesson").classList.contains("hidden");
- if(opts[n]===k){L.queue.shift();const ln=pick(PRAISE);lb(ln,"happy");speak([linePath("praise",PRAISE,ln)]).then(()=>{if(live())L.queue.length?renderPractice():nextStep()})}
- else{btns[n].classList.add("wrong");L.queue.push(L.queue.shift());const sc=pick(SCOLD);lb(`${sc} ${w[0]} means “${w[1]}”.`,"mad");loseLife(renderPractice,speak([linePath("scold",SCOLD,sc),wordPath(w[0])],2000))}}
+ if(opts[n]===k){L.queue.shift();const ln=nextPraise();lb(ln,"happy");speak([linePath("praise",PRAISE,ln)]).then(()=>{if(live())L.queue.length?renderPractice():nextStep()})}
+ else{btns[n].classList.add("wrong");L.queue.push(L.queue.shift());const sc=nextScold();lb(`${sc} ${w[0]} means “${w[1]}”.`,"mad");loseLife(renderPractice,speak([linePath("scold",SCOLD,sc),wordPath(w[0])],2000))}}
 function renderBuild(){const [s,e]=L.u.build[L.b];L.words=s.split(" ");L.pool=shuffle(L.words.map((t,id)=>({t,id})));L.picked=[];L.lock=false;
  $("stepName").textContent=`Build · ${L.b+1} of ${L.u.build.length}`;lBar(2/3+L.b/L.u.build.length/3);drawBuild(e)}
 function drawBuild(e){e=e||L.u.build[L.b][1];
@@ -419,9 +421,9 @@ function drawBuild(e){e=e||L.u.build[L.b][1];
  <div class="row nav"><button class="btn" data-act="check"${L.picked.length===L.words.length?"":" disabled"}>Check</button></div>`}
 function checkBuild(){if(L.lock)return;L.lock=true;const [s]=L.u.build[L.b];
  const me=L,live=()=>L===me&&!$("lesson").classList.contains("hidden");
- if(L.picked.map(p=>p.t).join(" ")===s){const ln=pick(PRAISE);lb(ln,"happy");
+ if(L.picked.map(p=>p.t).join(" ")===s){const ln=nextPraise();lb(ln,"happy");
   speak([linePath("praise",PRAISE,ln),wordPath(s)],1300).then(()=>{if(live()){L.b++;L.b<L.u.build.length?renderBuild():nextStep()}})}
- else{const sc=pick(SCOLD);lb(`${sc} It's “${s}”.`,"mad");loseLife(renderBuild,speak([linePath("scold",SCOLD,sc),wordPath(s)],2000))}}
+ else{const sc=nextScold();lb(`${sc} It's “${s}”.`,"mad");loseLife(renderBuild,speak([linePath("scold",SCOLD,sc),wordPath(s)],2000))}}
 function renderTalk(){$("stepName").textContent="Talk";lBar(.95);
  $("lBody").innerHTML=`<div class="convo">${L.u.talk.map(([who,i,e])=>`<div class="line ${who==="A"?"a":"b"}"><b>${i}</b><span>${e}</span><button class="say" data-w="${esc(i)}">Hear it</button></div>`).join("")}</div>
  <div class="row nav"><button class="btn alt" data-act="playall">Play conversation</button><button class="btn" data-act="finish">Finish unit</button></div>`}
